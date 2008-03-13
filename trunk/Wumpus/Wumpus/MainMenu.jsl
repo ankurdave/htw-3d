@@ -1,0 +1,150 @@
+package Wumpus;
+
+import System.Collections.Generic.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import System.Drawing.*;
+import System.Windows.Forms.*;
+
+/**
+ * Summary description for MainMenu.
+ */
+public class MainMenu extends System.Windows.Forms.Form
+{
+	private int choice;
+	private Button newGame;
+	private Button highScore;
+	private Button quit;
+	private PictureBox logo;
+
+	/**
+	 * Required designer variable.
+	 */
+	private System.ComponentModel.IContainer components;
+
+	public MainMenu()
+	{
+		InitializeComponent();
+	}
+
+	#region Windows Form Designer generated code
+	/**
+     * Clean up any resources being used.
+     */
+	protected void Dispose(boolean disposing)
+	{
+		if (disposing)
+		{
+			if (components != null)
+			{
+				components.Dispose();
+			}
+		}
+		super.Dispose(disposing);
+	}
+
+	/**
+	 * Required method for Designer support - do not modify
+	 * the contents of this method with the code editor.
+	 */
+	private void InitializeComponent()
+	{
+		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(MainMenu.class.ToType());
+		this.highScore = new System.Windows.Forms.Button();
+		this.newGame = new System.Windows.Forms.Button();
+		this.quit = new System.Windows.Forms.Button();
+		this.logo = new System.Windows.Forms.PictureBox();
+		((System.ComponentModel.ISupportInitialize)(this.logo)).BeginInit();
+		this.SuspendLayout();
+		// 
+		// highScore
+		// 
+		this.highScore.set_BackColor(System.Drawing.Color.get_Black());
+		this.highScore.get_FlatAppearance().set_BorderColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64)))));
+		this.highScore.get_FlatAppearance().set_MouseOverBackColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24)))));
+		this.highScore.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.highScore.set_ForeColor(System.Drawing.Color.get_White());
+		this.highScore.set_Location(new System.Drawing.Point(150, 200));
+		this.highScore.set_Name("highScore");
+		this.highScore.set_Size(new System.Drawing.Size(100, 30));
+		this.highScore.set_TabIndex(1);
+		this.highScore.set_Text("High Scores");
+		this.highScore.set_UseVisualStyleBackColor(false);
+		this.highScore.add_Click(new System.EventHandler(this.highScore_Click));
+		// 
+		// newGame
+		// 
+		this.newGame.get_FlatAppearance().set_BorderColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64)))));
+		this.newGame.get_FlatAppearance().set_MouseOverBackColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24)))));
+		this.newGame.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.newGame.set_ForeColor(System.Drawing.Color.get_White());
+		this.newGame.set_Location(new System.Drawing.Point(40, 200));
+		this.newGame.set_Name("newGame");
+		this.newGame.set_Size(new System.Drawing.Size(100, 30));
+		this.newGame.set_TabIndex(0);
+		this.newGame.set_Text("New Game");
+		this.newGame.add_Click(new System.EventHandler(this.newGame_Click));
+		// 
+		// quit
+		// 
+		this.quit.get_FlatAppearance().set_BorderColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64)))));
+		this.quit.get_FlatAppearance().set_MouseOverBackColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24)))));
+		this.quit.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.quit.set_ForeColor(System.Drawing.Color.get_White());
+		this.quit.set_Location(new System.Drawing.Point(260, 200));
+		this.quit.set_Name("quit");
+		this.quit.set_Size(new System.Drawing.Size(100, 30));
+		this.quit.set_TabIndex(2);
+		this.quit.set_Text("Quit");
+		this.quit.add_Click(new System.EventHandler(this.quit_Click));
+		// 
+		// logo
+		// 
+		this.logo.set_Anchor(((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+					| System.Windows.Forms.AnchorStyles.Right))));
+		this.logo.set_BackgroundImage(((System.Drawing.Image)(resources.GetObject("logo.BackgroundImage"))));
+		this.logo.set_Location(new System.Drawing.Point(1, 3));
+		this.logo.set_Name("logo");
+		this.logo.set_Size(new System.Drawing.Size(399, 151));
+		// 
+		// MainMenu
+		// 
+		this.set_BackColor(System.Drawing.Color.get_Black());
+		this.set_ClientSize(new System.Drawing.Size(403, 263));
+		this.get_Controls().Add(this.highScore);
+		this.get_Controls().Add(this.newGame);
+		this.get_Controls().Add(this.quit);
+		this.get_Controls().Add(this.logo);
+		this.set_Name("MainMenu");
+		this.set_StartPosition(System.Windows.Forms.FormStartPosition.CenterScreen);
+		this.set_Text("Hunt the Wumpus");
+		this.set_TopMost(true);
+		((System.ComponentModel.ISupportInitialize)(this.logo)).EndInit();
+		this.set_FormBorderStyle(FormBorderStyle.FixedDialog);
+		this.set_MinimizeBox(false);
+		this.set_MaximizeBox(false);
+		this.ResumeLayout(false);
+	}
+	#endregion
+
+	private void newGame_Click(Object sender, System.EventArgs e)
+	{
+		choice = 0;
+		this.set_DialogResult(DialogResult.OK);
+	}
+	private void highScore_Click(Object sender, System.EventArgs e)
+	{
+		choice = 1;
+		this.set_DialogResult(DialogResult.OK);
+	}
+	private void quit_Click(Object sender, System.EventArgs e)
+	{
+		Application.Exit();
+	}
+
+	public int getChoice()
+	{
+		return choice;
+	}
+
+}

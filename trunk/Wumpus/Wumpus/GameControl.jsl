@@ -1,0 +1,378 @@
+package Wumpus;
+
+/**
+ * Manages game flow and handles interactions between other objects.
+ *
+ * @author ankur
+ */
+public class GameControl
+{
+	public Player player;
+	public HighScore highScore;
+	public Trivia trivia;
+	public Map map;
+	public GraphicsEngine graphics;
+
+	/**
+	 * Initializes permanent objects.
+	 */
+	public GameControl()
+	{
+		// Creates the GraphicsEngine.
+		graphics = new GraphicsEngine(this);
+
+		// Initializes Trivia and HighScore.
+		try
+		{
+			trivia = new Trivia("trivia.trivia");
+			highScore = new HighScore("highscore.highscore");
+		}
+		catch (java.io.IOException e)
+		{
+			graphics.fatalError("Can't open game files: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Starts the game by displaying the main menu.
+	 */
+	public void start()
+	{
+		try
+		{ graphics.mainMenu(); }
+		catch (EndGameException e)
+		{ start(); }
+	}
+
+
+	/**
+	 * Retrieves the game's graphics engine so the application can run.
+	 * @return the graphics engine
+	 */
+	public GraphicsEngine getGraphicsEngine()
+	{
+		return graphics;
+	}
+
+	/**
+	 * Initializes game-specific objects and starts the game loop.
+	 */
+	public void newGame()
+	{
+		// Creates the Map object.
+		try
+		{
+			map = new Map(graphics.promptUserForCave(Map.getCaves()).getFileName());
+		}
+		catch (java.io.IOException e)
+		{
+			graphics.fatalError("Can't open game files: " + e.getMessage());
+		}
+
+		// Initializes the game objects.
+		String name = graphics.promptUserForName();
+		player = new Player(this, name);
+
+		// Gives some cheat information when debugging.
+		System.Diagnostics.Debug.Print(map.getWumpus().toString());
+		Hazard[] hazards = map.getHazards();
+		for (int i = 0; i < hazards.length; i++)
+			System.Diagnostics.Debug.Print(hazards[i].toString());
+
+		refreshGraphics();
+	}
+
+	/**
+	 * Executes the action that the user selected.
+	 */
+	public void act(int userSelection)
+	{
+		// Processes the action.
+		if (userSelection >= 0 && userSelection < 6)
+		{ // === user wants to move
+			try
+			{
+				move(new Direction(userSelection));
+
+			}
+			catch (InvalidMoveException e)
+			{
+				
+			}
+		}
+		else if (userSelection >= 10 && userSelection < 16)
+		{ // === user wants to shoot
+			try
+			{
+				shoot(new Direction(userSelection - 10));
+			}
+			catch (InvalidShotException e)
+			{
+				
+			}
+		}
+		else if (userSelection == 20)
+		{ // === user wants to buy arrows
+			buyArrows();
+		}
+		else if (userSelection == 30)
+		{ // === user wants to buy a hint
+			buyHint();
+		}
+	}
+
+	/**
+	 * Moves the player in a certain direction, updating the player statistics.
+	 * @param direction the direction in which to move
+	 * @exception InvalidMoveException if no tunnel exists in the given direction
+	 */
+	private void move(Direction direction) throws InvalidMoveException
+	{
+		// Finds the target room.
+		Room targetRoom = map.getAdjacentRoom(map.getCurrentRoom(), direction);
+		if (targetRoom == null)
+			throw new InvalidMoveException();
+
+		// Shows the move animation.
+		graphics.drawPanel.move(direction.getDirection());
+
+		// Updates the player statistics.
+		player.move();
+
+		graphics.hintBought(getHint());
+
+		// Moves to that room.
+		move(targetRoom);
+	}
+
+	/**
+	 * Moves the player to a certain room, not updating the player statistics.
+	 * @param room the room to which to move
+	 */
+	public void move(Room room)
+	{
+		// Updates the player's current room.
+		map.move(room);
+
+		// Redraws the screen.
+		graphics.move();
+
+		graphics.displayStats(player);
+
+		checkHazards(room);
+	}
+
+	/**
+	 * Sends game state to the graphics engine.
+	 */
+	public void refreshGraphics()
+	{
+		graphics.displayStats(player);
+	}
+
+	/**
+	 * Fires an arrow in the given direction, updating statistics and environment objects.
+	 * @param direction the direction in which to shoot the arrow
+	 * @exception InvalidShotException if there is no tunnel in the given direction
+	 */
+	private void shoot(Direction direction) throws InvalidShotException
+	{
+		// Finds the target room.
+		Room targetRoom = map.getAdjacentRoom(map.getCurrentRoom(), direction);
+		if (targetRoom == null)
+			throw new InvalidShotException();
+
+		// Traps an exception where the player has no more arrows left.
+		try
+		{
+			// Updates player statistics.
+			player.shootArrow();
+			// Shows the shot graphically.
+			graphics.drawPanel.shoot(direction.getDirection());
+			// Checks if the shot hit the wumpus.
+			if (map.isWumpusAt(targetRoom))
+			{
+				graphics.wumpusHit();
+				graphics.killWumpus();
+				player.win();
+				int playerIndex = -1;
+				try
+				{
+					playerIndex = highScore.add(player);
+				}
+				catch (java.io.IOException e)
+				{
+					System.err.println("Can't save score: " + e);
+				}
+				endGame("We shall feast on wumpus tonight!", playerIndex);
+			}
+			else
+			{
+				graphics.wumpusMissed();
+			}
+		}
+		catch (InsufficientArrowsException e)
+		{ graphics.outOfArrows(); }
+	}
+
+	/**
+	 * Checks for hazards in and around this room, updating the display accordingly.
+	 */
+	public void checkHazards(Room room)
+	{
+		// Finds the hazards in and around the room.
+		Hazard[] hazardsAdjacent = map.getAdjacentHazards(room);
+		Hazard hazard = map.getHazardAt(room);
+
+		// Checks for hazards around the room.
+		if (map.wumpusInAdjacentRoom())
+			graphics.wumpusNearby();
+		for (int i = 0; i < hazardsAdjacent.length; i++)
+		{
+			if (hazardsAdjacent[i] == null)
+				continue;
+			if (hazardsAdjacent[i].getType() == Hazard.BAT)
+				graphics.batsNearby();
+			else if (hazardsAdjacent[i].getType() == Hazard.PIT)
+				graphics.pitNearby();
+		}
+
+		// Checks for hazards in the room
+		if (map.isWumpusAt(room))
+			fightWumpus();
+		else if (hazard != null)
+		{
+			if (hazard.getType() == Hazard.BAT)
+			{
+				encounterBats();
+				hazard.setLocation(map.randomRoom());
+			}
+			else if (hazard.getType() == Hazard.PIT)
+				fallInPit();
+		}
+	}
+
+	/**
+	 * Tells the user they have fallen into a pit and allows them an opportunity to escape.
+	 */
+	private void fallInPit()
+	{
+		graphics.fallInPit();
+		if (graphics.askTrivia(3, 2, "escape the pit", trivia, player))
+		{
+			graphics.escapePit();
+			move(map.getStartRoom());
+		}
+		else
+		{
+			graphics.dieInPit();
+			endGame("You fell in a pit.", -1);
+		}
+	}
+
+	private void encounterBats()
+	{
+		graphics.encounterBats();
+		Room[] hazardRooms = new Room[4];
+		for (int i = 0; i < 4; i++)
+			hazardRooms[i] = (map.getHazards())[i].getLocation();
+		map.getHazardAt(map.getCurrentRoom()).setLocation(map.cave.randomRoomExcluding(hazardRooms));
+
+/*		// TODO: revert this cheat
+		move(map.cave.getRoomAt(20));
+ */
+		move(map.randomRoom());
+	}
+
+	private void fightWumpus()
+	{
+		graphics.fightWumpus();
+		if (graphics.askTrivia(5, 3, "defeat the wumpus", trivia, player))
+		{
+			graphics.surviveWumpus();
+			graphics.wumpusRanAway();
+			for (int i = 0; i < (int)(Math.random() * 2 + 2); i++)
+			{
+				Room wumpusLoc = map.getWumpus().getLocation();
+				Room[] wumpusPossibleLocs = map.getAdjacentRoomsNotIncludingEmptyRooms(wumpusLoc);
+				Room wumpusNewLoc = wumpusPossibleLocs[(int)(Math.random() * wumpusPossibleLocs.length)];
+				map.getWumpus().setLocation(wumpusNewLoc);
+			}
+		}
+		else
+		{
+			graphics.wumpusKills();
+			endGame("You were killed by the wumpus.", -1);
+		}
+	}
+
+	/**
+	 * Draws the end game sequence, stores current score into high score chart, and
+	 * shows high scores.
+	 */
+	public void endGame(String reason, int playerIndex)
+	{
+		graphics.endGame(reason, playerIndex);
+		throw new EndGameException();
+	}
+	public HighScore highScore()
+	{
+		return highScore;
+	}
+	private void buyArrows()
+	{
+		graphics.buyArrows();
+		if (graphics.askTrivia(3, 2, "buy 2 arrows", trivia, player))
+		{
+			player.buyArrows(2);
+			graphics.arrowsBought();
+		}
+		else
+		{
+			graphics.noArrowsBought();
+		}
+	}
+	private void buyHint()
+	{
+		graphics.buyHint();
+		if (graphics.askTrivia(3, 2, "buy a hint", trivia, player))
+		{
+			graphics.hintBought(getHint());
+		}
+		else
+		{
+			graphics.noHintBought();
+		}
+	}
+	public String getHint()
+	{
+		String hint = null;
+		int rand = (int)(Math.random() * 8);
+		switch (rand)
+		{
+			case 0: // location of a hazard
+				Hazard[] hazards = map.getHazards();
+				Hazard hazard = hazards[(int)(Math.random() * hazards.length)];
+				hint = hazard.toString();
+				break;
+			case 1: // location of wumpus
+				hint = map.getWumpus().toString();
+				break;
+			case 2: // your location
+				hint = "You are at " + map.getCurrentRoom();
+				break;
+			case 3: // trivia hint
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				hint = trivia.peekRandomQuestion().getHint();
+				break;
+			default:
+				System.Diagnostics.Debug.Print("Something's messed up with Math.random().");
+				break;
+		}
+		return hint;
+	}
+}
+

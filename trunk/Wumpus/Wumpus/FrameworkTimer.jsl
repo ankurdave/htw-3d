@@ -1,0 +1,14 @@
+package Wumpus;
+
+/**
+ * Summary description for FrameworkTimer.
+ */
+public class FrameworkTimer
+{
+	public FrameworkTimer()
+	{
+		//
+		// TODO: Add Constructor Logic here
+		//
+	}
+}

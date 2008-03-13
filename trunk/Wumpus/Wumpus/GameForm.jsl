@@ -1,0 +1,269 @@
+package Wumpus;
+
+import System.Collections.Generic.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import System.Drawing.*;
+import System.Windows.Forms.*;
+
+/**
+ * Summary description for GameForm.
+ */
+public class GameForm extends System.Windows.Forms.Form
+{
+	private GraphicsEngine graphicsEngine;
+	private Panel stats;
+	private Panel display;
+	private GroupBox arrowsBox;
+	private GroupBox turnsBox;
+	private GroupBox coinsBox;
+	private Label turns;
+	private Label coins;
+	private Label arrows;
+	private Button mainMenu;
+	private TextBox messages;
+
+	private int action = 0;
+	private int direction = 0;
+	private static final int MOVING = 0;
+	private static final int SHOOTING = 10;
+	private static final int BUYING = 20;
+
+	/**
+	 * Required designer variable.
+	 */
+	private System.ComponentModel.IContainer components;
+
+	public GameForm(GraphicsEngine g)
+	{
+		this.graphicsEngine = g;
+
+		//
+		// Required for Windows Form Designer support
+		//
+		InitializeComponent();
+	}
+
+	public void DrawRoom(Room room)
+	{
+		System.out.println("Drawing " + room);
+	}
+
+	public void updateStats(Player p)
+	{
+		turns.set_Text(Integer.toString(p.getTurns()));
+		coins.set_Text(Integer.toString(p.getCoins()));
+		arrows.set_Text(Integer.toString(p.getArrows()));
+	}
+
+	public void message(String message)
+	{
+		messages.set_Text(messages.get_Text() + message); // ugh...and that's why C# is better
+	}
+
+	#region Windows Form Designer generated code
+	/**
+     * Clean up any resources being used.
+     */
+	protected void Dispose(boolean disposing)
+	{
+		if (disposing)
+		{
+			if (components != null)
+			{
+				components.Dispose();
+			}
+		}
+		super.Dispose(disposing);
+	}
+
+	/**
+	 * Required method for Designer support - do not modify
+	 * the contents of this method with the code editor.
+	 */
+	private void InitializeComponent()
+	{
+		this.stats = new System.Windows.Forms.Panel();
+		this.turnsBox = new System.Windows.Forms.GroupBox();
+		this.turns = new System.Windows.Forms.Label();
+		this.coinsBox = new System.Windows.Forms.GroupBox();
+		this.arrowsBox = new System.Windows.Forms.GroupBox();
+		this.display = new System.Windows.Forms.Panel();
+		this.arrows = new System.Windows.Forms.Label();
+		this.coins = new System.Windows.Forms.Label();
+		this.mainMenu = new System.Windows.Forms.Button();
+		this.messages = new System.Windows.Forms.TextBox();
+		this.stats.SuspendLayout();
+		this.turnsBox.SuspendLayout();
+		this.coinsBox.SuspendLayout();
+		this.arrowsBox.SuspendLayout();
+		this.SuspendLayout();
+		// 
+		// stats
+		// 
+		this.stats.set_Anchor(((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+					| System.Windows.Forms.AnchorStyles.Left)
+					| System.Windows.Forms.AnchorStyles.Right))));
+		this.stats.get_Controls().Add(this.messages);
+		this.stats.get_Controls().Add(this.mainMenu);
+		this.stats.get_Controls().Add(this.turnsBox);
+		this.stats.get_Controls().Add(this.coinsBox);
+		this.stats.get_Controls().Add(this.arrowsBox);
+		this.stats.set_Location(new System.Drawing.Point(0, 0));
+		this.stats.set_Name("stats");
+		this.stats.set_Size(new System.Drawing.Size(666, 100));
+		this.stats.set_TabIndex(2);
+		// 
+		// turnsBox
+		// 
+		this.turnsBox.get_Controls().Add(this.turns);
+		this.turnsBox.set_Location(new System.Drawing.Point(152, 0));
+		this.turnsBox.set_Name("turnsBox");
+		this.turnsBox.set_Size(new System.Drawing.Size(100, 100));
+		this.turnsBox.set_TabIndex(2);
+		this.turnsBox.set_TabStop(false);
+		this.turnsBox.set_Text("Turns");
+		// 
+		// turns
+		// 
+		this.turns.set_AutoSize(true);
+		this.turns.set_Font(new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.turns.set_Location(new System.Drawing.Point(37, 36));
+		this.turns.set_Name("turns");
+		this.turns.set_Size(new System.Drawing.Size(26, 29));
+		this.turns.set_TabIndex(0);
+		this.turns.set_Text("0");
+		this.turns.set_TextAlign(System.Drawing.ContentAlignment.MiddleCenter);
+		// 
+		// coinsBox
+		// 
+		this.coinsBox.get_Controls().Add(this.coins);
+		this.coinsBox.set_Location(new System.Drawing.Point(364, 0));
+		this.coinsBox.set_Name("coinsBox");
+		this.coinsBox.set_Size(new System.Drawing.Size(100, 100));
+		this.coinsBox.set_TabIndex(1);
+		this.coinsBox.set_TabStop(false);
+		this.coinsBox.set_Text("Coins");
+		// 
+		// arrowsBox
+		// 
+		this.arrowsBox.get_Controls().Add(this.arrows);
+		this.arrowsBox.set_Location(new System.Drawing.Point(258, 0));
+		this.arrowsBox.set_Name("arrowsBox");
+		this.arrowsBox.set_Size(new System.Drawing.Size(100, 100));
+		this.arrowsBox.set_TabIndex(0);
+		this.arrowsBox.set_TabStop(false);
+		this.arrowsBox.set_Text("Arrows");
+		// 
+		// display
+		// 
+		this.display.set_Anchor(((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+					| System.Windows.Forms.AnchorStyles.Left)
+					| System.Windows.Forms.AnchorStyles.Right))));
+		this.display.set_Location(new System.Drawing.Point(0, 106));
+		this.display.set_Name("display");
+		this.display.set_Size(new System.Drawing.Size(666, 427));
+		this.display.set_TabIndex(3);
+		// 
+		// arrows
+		// 
+		this.arrows.set_AutoSize(true);
+		this.arrows.set_Font(new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.arrows.set_Location(new System.Drawing.Point(37, 36));
+		this.arrows.set_Name("arrows");
+		this.arrows.set_Size(new System.Drawing.Size(26, 29));
+		this.arrows.set_TabIndex(1);
+		this.arrows.set_Text("0");
+		this.arrows.set_TextAlign(System.Drawing.ContentAlignment.MiddleCenter);
+		// 
+		// coins
+		// 
+		this.coins.set_AutoSize(true);
+		this.coins.set_Font(new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.coins.set_Location(new System.Drawing.Point(37, 36));
+		this.coins.set_Name("coins");
+		this.coins.set_Size(new System.Drawing.Size(26, 29));
+		this.coins.set_TabIndex(2);
+		this.coins.set_Text("0");
+		this.coins.set_TextAlign(System.Drawing.ContentAlignment.MiddleCenter);
+		// 
+		// mainMenu
+		// 
+		this.mainMenu.set_Location(new System.Drawing.Point(12, 39));
+		this.mainMenu.set_Name("mainMenu");
+		this.mainMenu.set_Size(new System.Drawing.Size(107, 23));
+		this.mainMenu.set_TabIndex(3);
+		this.mainMenu.set_Text("Main Menu");
+		this.mainMenu.set_UseVisualStyleBackColor(true);
+		this.mainMenu.add_Click(new System.EventHandler(this.mainMenu_Click));
+		// 
+		// messages
+		// 
+		this.messages.set_AcceptsReturn(true);
+		this.messages.set_Location(new System.Drawing.Point(470, 12));
+		this.messages.set_Multiline(true);
+		this.messages.set_Name("messages");
+		this.messages.set_ReadOnly(true);
+		this.messages.set_Size(new System.Drawing.Size(184, 85));
+		this.messages.set_TabIndex(4);
+		// 
+		// GameForm
+		// 
+		this.set_AutoScaleDimensions(new System.Drawing.SizeF(8F, 16F));
+		//this.set_AutoScaleMode(System.Windows.Forms.AutoScaleMode.Font);
+		this.set_ClientSize(new System.Drawing.Size(666, 533));
+		this.get_Controls().Add(this.display);
+		this.get_Controls().Add(this.stats);
+		this.set_Name("GameForm");
+		this.set_StartPosition(System.Windows.Forms.FormStartPosition.CenterScreen);
+		this.set_Text("Hunt the Wumpus");
+		//this.set_WindowState(System.Windows.Forms.FormWindowState.Maximized);
+		this.add_KeyPress(new System.Windows.Forms.KeyPressEventHandler(this.GameForm_KeyPress));
+		this.stats.ResumeLayout(false);
+		this.stats.PerformLayout();
+		this.turnsBox.ResumeLayout(false);
+		this.turnsBox.PerformLayout();
+		this.coinsBox.ResumeLayout(false);
+		this.coinsBox.PerformLayout();
+		this.arrowsBox.ResumeLayout(false);
+		this.arrowsBox.PerformLayout();
+		this.ResumeLayout(false);
+
+	}
+	#endregion
+
+	private void GameForm_KeyPress(Object sender, KeyPressEventArgs e)
+	{
+		System.out.println("key pressed" + e.get_KeyChar());
+		if (e.get_KeyChar() == 'm')
+			action = MOVING;
+		else if (e.get_KeyChar() == 's')
+			action = SHOOTING;
+		else if (e.get_KeyChar() == 'b')
+			action = BUYING;
+		else if (e.get_KeyChar() == 'q')
+			graphicsEngine.gc.act(100);
+		else if (action == MOVING || action == SHOOTING)
+		{
+			if (e.get_KeyChar() == 'n')
+				direction++;
+			else if (e.get_KeyChar() == 'p')
+				direction--;
+			else if (e.get_KeyChar() == '\n')
+				graphicsEngine.gc.act(action + (direction % 6));
+		}
+		else if (action == BUYING)
+		{
+			if (e.get_KeyChar() == 'a')
+				graphicsEngine.gc.act(action);
+			else if (e.get_KeyChar() == 'h')
+				graphicsEngine.gc.act(action + 10);
+		}
+	}
+
+	private void mainMenu_Click(Object sender, System.EventArgs e)
+	{
+		graphicsEngine.mainMenu();
+	}
+
+}

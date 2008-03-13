@@ -1,0 +1,101 @@
+package Wumpus;
+import java.io.*;
+
+public class HighScore
+{
+	private final static int HIGHSCORES = 10;
+	private String filename;
+	private Player[] scores;
+	
+	public HighScore(String filename)
+	{
+		this.filename = filename;
+	}
+
+	public int add(Player p) throws IOException
+	{
+		get();
+		Player[] scoresNew = new Player[HIGHSCORES+1];
+		for (int i = 0; i < scores.length; i++)
+			scoresNew[i] = scores[i];
+		scoresNew[scores.length] = p;
+		java.util.Arrays.sort(scoresNew);
+		for (int i = 0; i < scoresNew.length - 1; i++)
+			scores[i] = scoresNew[i];
+		save();
+
+		for (int i = 0; i < scores.length; i++)
+			if (scores[i] == p)
+				return i;
+		return -1;
+	}
+
+	public Player[] get() throws IOException
+	{
+		if (scores == null)
+		{
+			BufferedReader file = null;
+			try
+			{
+				file = new BufferedReader(new FileReader(filename));
+				String line;
+				int i = 0;
+				scores = new Player[HIGHSCORES];
+				while ((line = file.readLine()) != null)
+				{
+					Player p = new Player();
+					try
+					{ p.fromString(line); }
+					catch (Exception e)
+					{ throw new IOException("Can't parse high scores:" + e.get_Message()); }
+					if (i < HIGHSCORES)
+						scores[i] = p;
+					i++;
+				}
+			}
+			catch (IOException e)
+			{
+				throw e;
+			}
+			finally
+			{
+				if (file != null)
+					file.close();
+			}
+		}
+		java.util.Arrays.sort(scores);
+		int nonNullEntries = 0;
+		for (int i = 0; i < scores.length; i++)
+			if (scores[i] != null)
+				nonNullEntries++;
+		Player[] nonNull = new Player[nonNullEntries];
+		int outIndex = 0;
+		for (int i = 0; i < scores.length; i++)
+			if (scores[i] != null)
+				nonNull[outIndex++] = scores[i];
+		java.util.Arrays.sort(nonNull);
+		return nonNull;
+	}
+
+	private void save() throws IOException
+	{
+		FileWriter file = null;
+		java.util.Arrays.sort(scores);
+		try
+		{
+			file = new FileWriter(filename, false);
+			for (int i = 0; i < scores.length; i++)
+				if (scores[i] != null)
+					file.write(scores[i].toHighScoreString() + "\r\n");
+		}
+		catch (IOException e)
+		{
+			throw e;
+		}
+		finally
+		{
+			if (file != null)
+				file.close();
+		}
+	}
+}

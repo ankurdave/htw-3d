@@ -1,0 +1,159 @@
+package Wumpus;
+
+public class Map
+{
+	public Cave cave;
+	private Room playerLocation;
+	private Room startLocation;
+	private Hazard[] pits;
+	private Hazard[] bats;
+	private Wumpus wumpus;
+
+	public Map(String caveFilename) throws java.io.IOException
+	{
+		cave = new Cave();
+		cave.load(caveFilename);
+
+		pits = new Hazard[2];
+		bats = new Hazard[2];
+
+		// Place the hazards and wumpus in random rooms.
+		Room[] rooms = new Room[5]; // pool of random rooms
+		for (int i = 0; i < rooms.length; i++)
+			rooms[i] = cave.randomRoomExcluding(rooms);
+		pits[0] = new Hazard(Hazard.PIT, rooms[0]);
+		pits[1] = new Hazard(Hazard.PIT, rooms[1]);
+		bats[0] = new Hazard(Hazard.BAT, rooms[2]);
+		bats[1] = new Hazard(Hazard.BAT, rooms[3]);
+		wumpus = new Wumpus(rooms[4]);
+		// Start at a random room.
+		startLocation = playerLocation = cave.randomRoomExcluding(rooms);
+
+/*		pits[0] = new Hazard(Hazard.PIT, cave.getRoomAt(1));
+		pits[1] = new Hazard(Hazard.PIT, cave.getRoomAt(3));
+		bats[0] = new Hazard(Hazard.BAT, cave.getRoomAt(6));
+		bats[1] = new Hazard(Hazard.BAT, cave.getRoomAt(5));
+		wumpus = new Wumpus(cave.getRoomAt(21));
+		startLocation = playerLocation = cave.getRoomAt(0);
+*/	}
+
+	public static Cave[] getCaves()
+	{
+		String[] caveFilenames = System.IO.Directory.GetFiles(".", "*.cave");
+		Cave[] caves = new Cave[caveFilenames.length];
+		for (int i = 0; i < caveFilenames.length; i++)
+		{
+			Cave cave = new Cave();
+			try
+			{
+				cave.load(caveFilenames[i]);
+			}
+			catch (java.io.IOException e)
+			{
+				System.err.println("Can't load cave " + caveFilenames[i] + ": " + e.getMessage());
+			}
+			caves[i] = cave;
+		}
+		return caves;
+	}
+
+	public Room randomRoom()
+	{
+		return cave.randomRoom();
+	}
+
+	public void move(Room r)
+	{
+		playerLocation = r;
+	}
+
+	public Hazard[] getAdjacentHazards(Room room)
+	{
+		Room[] ra = cave.getAdjacentRooms(room);
+		Hazard[] h = new Hazard[6];
+		for (int x = 0; x < 6; x++)
+			if (ra[x] != null)
+				h[x] = getHazardAt(ra[x]);
+		return h;
+	}
+
+	public boolean wumpusInAdjacentRoom()
+	{
+		Room[] ra = cave.getAdjacentRooms(playerLocation);
+		for (int x = 0; x < 6; x++)
+			if (ra[x] != null)
+				if (ra[x].getRoomNumber() == wumpus.getLocation().getRoomNumber())
+					return true;
+
+		return false;
+	}
+
+	public Hazard getHazardAt(Room r)
+	{
+		for (int i = 0; i < pits.length; i++)
+			if (pits[i].getLocation().getRoomNumber() == r.getRoomNumber())
+				return pits[i];
+		for (int i = 0; i < bats.length; i++)
+			if (bats[i].getLocation().getRoomNumber() == r.getRoomNumber())
+				return bats[i];
+
+		return null;
+	}
+
+	public boolean isWumpusAt(Room r)
+	{
+		return wumpus.getLocation().getRoomNumber() == r.getRoomNumber();
+	}
+
+	public Room getCurrentRoom()
+	{
+		return playerLocation;
+	}
+
+	public Room getStartRoom()
+	{
+		return startLocation;
+	}
+
+	public Room getAdjacentRoom(Room room, Direction direction)
+	{
+		return cave.getAdjacentRoom(room, direction);
+	}
+
+	public Room[] getAdjacentRooms(Room room)
+	{
+		return cave.getAdjacentRooms(room);
+	}
+
+	public Room[] getAdjacentRoomsNotIncludingEmptyRooms(Room room)
+	{
+		Room[] rooms = cave.getAdjacentRooms(room);
+		int nonEmptyRooms = 0;
+		for (int i = 0; i < 6; i++)
+			if (rooms[i] != null)
+				nonEmptyRooms++;
+		Room[] roomsNotEmpty = new Room[nonEmptyRooms];
+		int index = 0;
+		for (int i = 0; i < 6; i++)
+			if (rooms[i] != null)
+				roomsNotEmpty[index++] = rooms[i];
+		return roomsNotEmpty;
+		
+	}
+
+	public Wumpus getWumpus()
+	{
+		return wumpus;
+	}
+
+	public Hazard[] getHazards()
+	{
+		Hazard[] out = new Hazard[4];
+		for (int i = 0; i < 2; i++)
+			out[i] = pits[i];
+		for (int i = 0; i < 2; i++)
+			out[i + 2] = bats[i];
+		return out;
+	}
+
+}

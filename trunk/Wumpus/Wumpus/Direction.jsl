@@ -1,0 +1,63 @@
+package Wumpus;
+
+public class Direction
+{
+	private int value;
+
+	/* 0 = North
+	 * 1 = Northeast
+	 * 2 = Southeast
+	 * 3 = South
+	 * 4 = Southwest
+	 * 5 = Northwest
+	 */
+
+	public static String lookupDirection(int i)
+	{
+		String out;
+		switch (i)
+		{
+			case 0:
+				out = "north";
+				break;
+			case 1:
+				out = "northeast";
+				break;
+			case 2:
+				out = "southeast";
+				break;
+			case 3:
+				out = "south";
+				break;
+			case 4:
+				out = "southwest";
+				break;
+			case 5:
+				out = "northwest";
+				break;
+			default:
+				out = null;
+				break;
+		}
+		return out;
+	}
+
+	public Direction(int dir)
+	{
+		value = dir;
+	}
+
+	public int getDirection()
+	{
+		return value;
+	}
+
+	public final static int NORTH = 0;
+	public final static int NORTHEAST = 1;
+	public final static int SOUTHEAST = 2;
+	public final static int SOUTH = 3;
+	public final static int SOUTHWEST = 4;
+	public final static int NORTHWEST = 5;
+}
+
+

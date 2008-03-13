@@ -1,0 +1,84 @@
+package Wumpus;
+import java.util.*;
+import java.io.*;
+/**
+ * Summary description for Program
+ */
+public class Trivia
+{
+	private ArrayList TriviaArray = new ArrayList();
+	private ArrayList TriviaArray2 = new ArrayList();
+
+	public Trivia(String filename) throws IOException
+	{
+		File f = new File(filename);
+		BufferedReader file = new BufferedReader(new FileReader(f));
+		String temp;
+		while (true)
+		{
+			String quest = file.readLine();
+			temp = file.readLine();
+			String hint = temp;
+			temp = file.readLine();
+			String qa = temp;
+			temp = file.readLine();
+			String qb = temp;
+			temp = file.readLine();
+			String qc = temp;
+			temp = file.readLine();
+			String qd = temp;
+			temp = file.readLine();
+			if (temp==null)
+				break;
+			int ans = Integer.parseInt(temp);
+			if (quest != null)
+			{
+				TriviaQuestion tq = new TriviaQuestion(quest, hint, qa, qb, qc, qd, ans);
+				TriviaArray.add(tq);
+			}
+			else
+				break;
+		}
+	}
+
+	public int getSize()
+	{
+		return TriviaArray.size();
+	}
+	public TriviaQuestion getNextQuestion()
+	{
+		if (TriviaArray.size() == 0)
+		{
+			for (int x = 0; x < TriviaArray2.size(); )
+			{
+				TriviaArray.add(TriviaArray2.get(x));
+				TriviaArray2.remove(x);
+			}
+		}
+		int rand = (int)(Math.random() * TriviaArray.size());
+		TriviaQuestion temp = (TriviaQuestion)TriviaArray.get(rand);
+		TriviaArray2.add(TriviaArray.get(rand));
+		TriviaArray.remove(rand);
+		return temp;
+	}
+	public TriviaQuestion peekRandomQuestion()
+	{
+		if (TriviaArray.size() == 0)
+		{
+			for (int x = 0; x < TriviaArray2.size(); )
+			{
+				TriviaArray.add(TriviaArray2.get(x));
+				TriviaArray2.remove(x);
+			}
+		}
+		int rand = (int)(Math.random() * TriviaArray.size());
+		TriviaQuestion temp = (TriviaQuestion)TriviaArray.get(rand);
+		TriviaArray2.add(TriviaArray.get(rand));
+		return temp;
+	}
+
+	public int size()
+	{
+		return TriviaArray.size();
+	}
+}

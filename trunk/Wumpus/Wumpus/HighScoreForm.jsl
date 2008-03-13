@@ -1,0 +1,159 @@
+package Wumpus;
+
+import System.Collections.Generic.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import System.Drawing.*;
+import System.Windows.Forms.*;
+
+/**
+ * Summary description for HighScoreForm.
+ */
+public class HighScoreForm extends System.Windows.Forms.Form
+{
+	/**
+	 * Required designer variable.
+	 */
+	private System.ComponentModel.IContainer components;
+	private Button ok;
+
+	public HighScoreForm(Player[] scores, int playerIndex)
+	{
+		//
+		// Required for Windows Form Designer support
+		//
+		InitializeComponent();
+
+		for (int i = -1; i < scores.length; i++)
+		{
+			if (i != -1 && scores[i] == null)
+				continue;
+			Label name = new Label();
+			name.set_Location(new Point(0, (i + 1) * 20));
+			name.set_Size(new Size(100, 20));
+			name.set_AutoEllipsis(true);
+			if (i == -1)
+			{
+				name.set_Text("Name");
+				name.set_Font(new Font(name.get_Font(), FontStyle.Bold));
+			}
+			else
+				name.set_Text(scores[i].getName());
+
+			Label turns = new Label();
+			turns.set_Location(new Point(100, (i + 1) * 20));
+			turns.set_Size(new Size(50, 20));
+			if (i == -1)
+			{
+				turns.set_Text("Turns");
+				turns.set_Font(new Font(turns.get_Font(), FontStyle.Bold));
+			}
+			else
+				turns.set_Text(Integer.toString(scores[i].getTurns()));
+
+			Label arrows = new Label();
+			arrows.set_Location(new Point(150, (i + 1) * 20));
+			arrows.set_Size(new Size(50, 20));
+			if (i == -1)
+			{
+				arrows.set_Text("Arrows");
+				arrows.set_Font(new Font(arrows.get_Font(), FontStyle.Bold));
+			}
+			else
+				arrows.set_Text(Integer.toString(scores[i].getArrows()));
+
+			Label coins = new Label();
+			coins.set_Location(new Point(200, (i + 1) * 20));
+			coins.set_Size(new Size(50, 20));
+			if (i == -1)
+			{
+				coins.set_Text("Coins");
+				coins.set_Font(new Font(coins.get_Font(), FontStyle.Bold));
+			}
+			else
+				coins.set_Text(Integer.toString(scores[i].getCoins()));
+
+			Label score = new Label();
+			score.set_Location(new Point(250, (i + 1) * 20));
+			score.set_Size(new Size(50, 20));
+			if (i == -1)
+			{
+				score.set_Text("Score");
+				score.set_Font(new Font(score.get_Font(), FontStyle.Bold));
+			}
+			else
+				score.set_Text(Integer.toString(scores[i].getCurrentScore()));
+
+			Label caveName = new Label();
+			caveName.set_Location(new Point(300, (i + 1) * 20));
+			caveName.set_Size(new Size(100, 20));
+			if (i == -1)
+			{
+				caveName.set_Text("Cave");
+				caveName.set_Font(new Font(caveName.get_Font(), FontStyle.Bold));
+			}
+			else
+				caveName.set_Text(scores[i].getCaveName());
+
+			this.get_Controls().Add(name);
+			this.get_Controls().Add(turns);
+			this.get_Controls().Add(arrows);
+			this.get_Controls().Add(coins);
+			this.get_Controls().Add(score);
+			this.get_Controls().Add(caveName);
+		}
+	}
+
+	#region Windows Form Designer generated code
+	/**
+     * Clean up any resources being used.
+     */
+	protected void Dispose(boolean disposing)
+	{
+		if (disposing)
+		{
+			if (components != null)
+			{
+				components.Dispose();
+			}
+		}
+		super.Dispose(disposing);
+	}
+
+	/**
+	 * Required method for Designer support - do not modify
+	 * the contents of this method with the code editor.
+	 */
+	private void InitializeComponent()
+	{
+		ok = new Button();
+		// 
+		// ok
+		// 
+		ok.set_Location(new Point(175, 230));
+		ok.set_Size(new Size(50, 20));
+		ok.set_Text("OK");
+		ok.add_Click(new System.EventHandler(okClicked));
+		// 
+		// HighScoreForm
+		// 
+		this.set_StartPosition(FormStartPosition.CenterScreen);
+		this.set_ClientSize(new System.Drawing.Size(400, 260));
+		this.get_Controls().Add(ok);
+		this.set_AcceptButton(ok);
+		this.set_Name("HighScoreForm");
+		this.set_Text("Hunt the Wumpus");
+		this.set_ShowInTaskbar(false);
+		this.set_FormBorderStyle(FormBorderStyle.FixedDialog);
+		this.set_MinimizeBox(false);
+		this.set_MaximizeBox(false);
+		this.ResumeLayout(false);
+
+	}
+	#endregion
+
+	private void okClicked(Object s, System.EventArgs e)
+	{
+		this.Close();
+	}
+}

@@ -1,0 +1,16 @@
+package Wumpus;
+
+public class ControlFlowException extends RuntimeException
+{ }
+public class EndGameException extends ControlFlowException
+{ }
+public class EndApplicationException extends ControlFlowException
+{ }
+public class InvalidMoveException extends Exception
+{ }
+public class InvalidShotException extends Exception
+{ }
+public class InsufficientCoinsException extends Exception
+{ }
+public class InsufficientArrowsException extends Exception
+{ }

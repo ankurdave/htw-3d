@@ -1,0 +1,50 @@
+package Wumpus;
+
+/**
+ * Summary description for TriviaQuestion.
+ */
+public class TriviaQuestion
+{
+	private String Question;
+	private String Hint;
+	private String a;
+	private String b;
+	private String c;
+	private String d;
+	private int answer;
+
+	public TriviaQuestion(String q, String h, String ans1, String ans2, String ans3, String ans4, int corrans)
+	{
+		Question = q;
+		Hint = h;
+		a = ans1;
+		b = ans2;
+		c = ans3;
+		d = ans4;
+		answer = corrans;
+	}
+
+	public String getHint()
+	{
+		return Hint;
+	}
+	public String getQuestion()
+	{
+		return Question;
+	}
+
+	public String[] getAnswers()
+	{
+		String[] s = new String[4];
+		s[0] = a;
+		s[1] = b;
+		s[2] = c;
+		s[3] = d;
+		return s;
+	}
+
+	public int getCorrect()
+	{
+		return answer;
+	}
+}

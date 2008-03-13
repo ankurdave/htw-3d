@@ -1,0 +1,1006 @@
+package Wumpus;
+
+#region Import directives
+import System.Windows.Forms.*;
+import System.*;
+import System.Drawing.*;
+import System.Collections.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import Microsoft.DirectX.*;
+import Microsoft.DirectX.Direct3D.*;
+import System.Runtime.InteropServices.*;
+//import System.Threading.*;
+import java.lang.Math;
+#endregion
+
+/*// Comment this out if you want to use the Windows Form Designer
+		// since it doesn't understand it.
+		for (int i = 0; i < 6; i++)
+			this.directionBox.get_Controls().Add(direction[i]);*/
+
+
+/**
+ * Manages all user interfaces such as forms and dialogs.
+ * 
+ * @author ankur
+ */
+public class GraphicsEngine extends System.Windows.Forms.Form
+{
+	#region Member variables
+	public GameControl gc;
+	private GroupBox actionBox;
+	private GroupBox directionBox;
+	public RadioButton[] action;
+	public RadioButton[] direction;
+	private GroupBox turnsBox;
+	private Label turns;
+	private GroupBox arrowsBox;
+	private Label arrows;
+	private GroupBox coinsBox;
+	private Label coins;
+	private GroupBox roomBox;
+	private Label room;
+	private MenuStrip menu;
+	private ToolStripMenuItem gameToolStripMenuItem;
+	private ToolStripMenuItem newGameToolStripMenuItem;
+	private ToolStripMenuItem highScoresToolStripMenuItem;
+	private ToolStripMenuItem quitToolStripMenuItem;
+	private ToolStripMenuItem helpToolStripMenuItem;
+	private ToolStripMenuItem instructionsToolStripMenuItem;
+	private ToolStripMenuItem aboutToolStripMenuItem;
+	public TextBox messages;
+	private Button actButton;
+	public DirectXPanel drawPanel;
+	private Timer frames;
+	private CheckBox autoRotate;
+	private boolean fullscreen = false;
+
+	/**
+	 * Required designer variable.
+	 */
+	private System.ComponentModel.IContainer components;
+	#endregion
+
+	#region Constructors
+
+	public GraphicsEngine(GameControl gc)
+	{
+		this.gc = gc;
+
+		InitializeComponent();
+	}
+
+	#endregion
+	
+	#region Custom methods
+	public void reset()
+	{
+		messages.set_Text("");
+	}
+
+	/** Displays the main menu.
+	 */
+	public void mainMenu()
+	{
+		
+	}
+
+	/** Draws the given room.
+	 * @param room the room to draw
+	 */
+	public void move()
+	{
+		this.room.set_Text(Integer.toString(gc.map.getCurrentRoom().getRoomNumber())); // wtf! why doesn't this autobox!? i hate j#
+		this.drawPanel.setRoom(gc.map.getCurrentRoom());
+	}
+
+	/** Prints a message to the message box.
+	 * @param message the message to print
+	 */
+	public void showMessage(String message)
+	{
+		messages.AppendText(message + "\r\n");
+		// Forces the text box to autoscroll.
+		messages.set_SelectionStart(messages.get_TextLength());
+		messages.ScrollToCaret();
+	}
+
+	/** Alerts the user that a wumpus is nearby.
+	 */
+	public void wumpusNearby()
+	{
+		showMessage("The ominous smell of a nearby wumpus wafts in...");
+	}
+
+	/** Alerts the user that bats are nearby.
+	 */
+	public void batsNearby()
+	{
+		showMessage("Bats rustle nearby.");
+	}
+
+	/** Alerts the user that a pit is nearby.
+	 */
+	public void pitNearby()
+	{
+		showMessage("Cold air seeps up from a nearby pit.");
+	}
+
+	/** Draws the user falling in a pit.
+	 */
+	public void fallInPit()
+	{
+		showMessage("You fall, screaming, into a pit.");
+		drawPanel.fallInPit();
+	}
+
+	/** Draws the user escaping from a pit.
+	 */
+	public void escapePit()
+	{
+		showMessage("The gods rescue you from the pit and place you back where you started the game.");
+		drawPanel.transition();
+		drawPanel.escapeFromPit();
+	}
+
+	/** Draws the user dying in a pit.
+	 */
+	public void dieInPit()
+	{
+		showMessage("You hit the pit bottom with a sickening crunch of bone on stone.");
+	}
+
+	/** Draws bats carrying the user away.
+	 */
+	public void encounterBats()
+	{
+		showMessage("Bats descend from the sky and carry you far away. With a crack, they leave.");
+		drawPanel.bat();
+		drawPanel.transition();
+	}
+
+	/** Draws the user fighting the wumpus.
+	 */
+	public void fightWumpus()
+	{
+		showMessage("You have braved many dangers, and now you face the worst one of them all: the mighty wumpus!");
+		drawPanel.wumpus();
+	}
+
+	/** Draws the user being killed by the wumpus.
+	 */
+	public void wumpusKills()
+	{
+		showMessage("The wumpus tears your heart out and eats it!");
+		drawPanel.wumpusKills();
+	}
+
+	/** Draws the user killing the wumpus.
+	 */
+	public void killWumpus()
+	{
+		showMessage("You slay the wumpus! We shall feast on wumpus tonight.");
+	}
+
+	/** Draws the user surviving the wumpus.
+	 */
+	public void surviveWumpus()
+	{
+		showMessage("You survive the wumpus!");
+		drawPanel.escapeWumpus();
+	}
+
+	/** Draws the user buying arrows. (Feel free not to draw anything here.)
+	 */
+	public void buyArrows()
+	{
+		showMessage("Buying arrows...");
+	}
+
+	/** Draws the user having bought arrows.
+	 */
+	public void arrowsBought()
+	{
+		showMessage("You bought 2 arrows.");
+	}
+
+	/** Draws the user not having bought arrows. (Feel free not to draw anything here.)
+	 */
+	public void noArrowsBought()
+	{
+		showMessage("You didn't get the arrows.");
+	}
+
+	/** Draws the user buying a hint. (Feel free not to draw anything here.)
+	 */
+	public void buyHint()
+	{
+		showMessage("Buying a hint...");
+	}
+
+	/** Displays a hint to the user.
+	 * @param hint the hint to be displayed
+	 */
+	public void hintBought(String hint)
+	{
+		showMessage("Here's your hint: " + hint);
+	}
+
+	/** Displays the user not having bought a hint. (Feel free not to draw anything here.)
+	 */
+	public void noHintBought()
+	{
+		showMessage("You didn't get a hint.");
+	}
+
+	/** Displays the wumpus in an adjacent room being hit by an arrow. (You might just want to print a message to the message box.)
+	 */
+	public void wumpusHit()
+	{
+		showMessage("Your arrow hit the wumpus!");
+	}
+
+	/** Displays the wumpus running away. (You might just want to print a message to the message box.)
+	 */
+	public void wumpusRanAway()
+	{
+		showMessage("The wumpus ran away.");
+	}
+
+	/** Displays the wumpus running into this room.
+	 */
+	public void wumpusRanHere()
+	{
+		showMessage("The wumpus ran into this room!");
+	}
+
+	/** Displays the arrow missing the wumpus. (You might just want to print a message to the message box.)
+	 */
+	public void wumpusMissed()
+	{
+		showMessage("You missed the wumpus.");
+	}
+
+	/** Tells the user he is out of arrows.
+	 */
+	public void outOfArrows()
+	{
+		showMessage("You're out of arrows.");
+	}
+
+	/** Tells the user he is out of coins.
+	 */
+	public void outOfCoins()
+	{
+		showMessage("You're out of coins.");
+	}
+
+	/** Draws the player statistics.
+	 * @param p the <CODE>Player</CODE> object storing the statistics
+	*/
+	public void displayStats(Player p)
+	{
+		turns.set_Text(Integer.toString(p.getTurns()));
+		coins.set_Text(Integer.toString(p.getCoins()));
+		arrows.set_Text(Integer.toString(p.getArrows()));
+		room.set_Text(Integer.toString(gc.map.getCurrentRoom().getRoomNumber()));
+		drawPanel.setRoom(gc.map.getCurrentRoom());
+		// Updates the direction radio buttons.
+		boolean[] tunnels = gc.map.getCurrentRoom().getTunnels();
+		for (int i = 0; i < tunnels.length; i++)
+			direction[i].set_Enabled(tunnels[i]);
+	}
+
+	/** Asks the user the given trivia question, returns the user's answer.
+	 */
+	/*	public boolean askTrivia(int total, int required, String action, Trivia trivia)
+		{
+			TriviaDialog t = new TriviaDialog(total, required, action, trivia);
+			if (t.ShowDialog() == DialogResult.OK)
+			{
+				try
+				{ player.subtractCoins(total); }
+				catch (InsufficientCoinsException e)
+				{
+					outOfCoins();
+					throw new EndGameException();
+				}
+				displayStats(player);
+				return t.getCorrect() >= required;
+			}
+			return false;
+		}
+		*/
+
+	public boolean askTrivia(int total, int required, String action, Trivia trivia, Player player)
+	{
+		showMessage("You need to answer " + required + " out of " + total + " questions to " + action + ".");
+		int correct = 0;
+		for (int i = 0; i < total; i++)
+		{
+			correct += askTriviaHelper(trivia.getNextQuestion()) ? 1 : 0;
+			try
+			{ player.subtractCoins(1); }
+			catch (InsufficientCoinsException e)
+			{
+				outOfCoins();
+				gc.endGame("You ran out of coins.", -1);
+			}
+			displayStats(player);
+		}
+		return correct >= required;
+	}
+
+	private boolean askTriviaHelper(TriviaQuestion q)
+	{
+		TriviaDialog t = new TriviaDialog(q);
+		if (t.ShowDialog() == DialogResult.OK)
+		{
+			showMessage((t.getChoice() == q.getCorrect()) ? "That's right." : "Wrong answer.");
+			return t.getChoice() == q.getCorrect();
+		}
+		else
+			return false;
+	}
+
+	/* Prompts the user for their name.
+	 */
+	public String promptUserForName()
+	{
+		NameDialog n = new NameDialog();
+		if (n.ShowDialog() == DialogResult.OK)
+			return n.getName();
+		else
+			return "Anonymous";
+	}
+
+	public Cave promptUserForCave(Cave[] caves)
+	{
+		CaveDialog c = new CaveDialog(caves);
+		if (c.ShowDialog() == DialogResult.OK)
+			return c.getCave();
+		else
+			return caves[0];
+	}
+
+	/** Tells the user the game is over.
+	 */
+	public void endGame(String reason, int playerIndex)
+	{
+		MessageBox.Show("Game over. " + reason + " Your score: " + gc.player.getCurrentScore());
+		showHighScores(playerIndex);
+		this.Close();
+	}
+
+	/** Alerts the user of a fatal error.
+	 */
+	public void fatalError(String message)
+	{
+		MessageBox.Show("Fatal error: " + message);
+		Application.Exit();
+		System.exit(-1);
+	}
+
+	public void showHighScores(Player[] scores, int playerIndex)
+	{
+		HighScoreForm f = new HighScoreForm(scores, playerIndex);
+		f.ShowDialog();
+	}
+
+	public void showHighScores(int playerIndex)
+	{
+		try
+		{ showHighScores(gc.highScore.get(), playerIndex); }
+		catch (java.io.IOException e)
+		{ System.err.println("Can't get high scores: " + e.getMessage()); }
+	}
+
+	#endregion
+
+	#region Windows Form Designer generated code
+	/**
+     * Clean up any resources being used.
+     */
+	protected void Dispose(boolean disposing)
+	{
+		if (disposing)
+		{
+			if (components != null)
+			{
+				components.Dispose();
+			}
+		}
+		super.Dispose(disposing);
+	}
+
+	/**
+	 * Required method for Designer support - do not modify
+	 * the contents of this method with the code editor.
+	 */
+	private void InitializeComponent()
+	{
+		#region Initialization
+		direction = new RadioButton[6];
+		for (int i = 0; i < 6; i++)
+		{
+			direction[i] = new RadioButton();
+			if (i == 0)
+				direction[i].set_Checked(true);
+			direction[i].add_CheckedChanged(new EventHandler(this.newDirection));
+		}
+		direction[0].set_Location(new System.Drawing.Point(40, 17));
+		direction[1].set_Location(new System.Drawing.Point(67, 37));
+		direction[2].set_Location(new System.Drawing.Point(67, 60));
+		direction[3].set_Location(new System.Drawing.Point(40, 79));
+		direction[4].set_Location(new System.Drawing.Point(16, 60));
+		direction[5].set_Location(new System.Drawing.Point(16, 37));
+
+		action = new RadioButton[4];
+		for (int i = 0; i < 4; i++)
+		{
+			action[i] = new RadioButton();
+		}
+		this.action[3].set_Location(new System.Drawing.Point(50, 80));
+		this.action[3].set_Size(new System.Drawing.Size(200, 20));
+		this.action[3].set_Text("Buy &hint");
+		this.action[3].add_CheckedChanged(new System.EventHandler(this.disableDirections));
+		this.action[2].set_Location(new System.Drawing.Point(50, 60));
+		this.action[2].set_Size(new System.Drawing.Size(200, 20));
+		this.action[2].set_Text("Buy &arrows");
+		this.action[2].add_CheckedChanged(new System.EventHandler(this.disableDirections));
+		this.action[1].set_Location(new System.Drawing.Point(50, 40));
+		this.action[1].set_Size(new System.Drawing.Size(200, 20));
+		this.action[1].set_Text("&Shoot");
+		this.action[1].add_CheckedChanged(new System.EventHandler(this.enableDirections));
+		this.action[0].set_Checked(true);
+		this.action[0].set_Location(new System.Drawing.Point(50, 20));
+		this.action[0].set_Size(new System.Drawing.Size(200, 20));
+		this.action[0].set_Text("&Move");
+		this.action[0].add_CheckedChanged(new System.EventHandler(this.enableDirections));
+
+		this.autoRotate = new CheckBox();
+		this.frames = new System.Windows.Forms.Timer();
+		this.actionBox = new System.Windows.Forms.GroupBox();
+		this.actButton = new System.Windows.Forms.Button();
+		this.directionBox = new System.Windows.Forms.GroupBox();
+		this.turnsBox = new System.Windows.Forms.GroupBox();
+		this.turns = new System.Windows.Forms.Label();
+		this.arrowsBox = new System.Windows.Forms.GroupBox();
+		this.arrows = new System.Windows.Forms.Label();
+		this.coinsBox = new System.Windows.Forms.GroupBox();
+		this.coins = new System.Windows.Forms.Label();
+		this.roomBox = new System.Windows.Forms.GroupBox();
+		this.room = new System.Windows.Forms.Label();
+		this.menu = new System.Windows.Forms.MenuStrip();
+		this.gameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.newGameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.highScoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.instructionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+		this.messages = new System.Windows.Forms.TextBox();
+		this.drawPanel = new DirectXPanel(this);
+		this.actionBox.SuspendLayout();
+		this.turnsBox.SuspendLayout();
+		this.arrowsBox.SuspendLayout();
+		this.coinsBox.SuspendLayout();
+		this.roomBox.SuspendLayout();
+		this.menu.SuspendLayout();
+		this.SuspendLayout();
+		#endregion
+		// 
+		// actionBox
+		// 
+		this.actionBox.set_Anchor((System.Windows.Forms.AnchorStyles)(
+			System.Windows.Forms.AnchorStyles.Top |
+			System.Windows.Forms.AnchorStyles.Right));
+		this.actionBox.get_Controls().Add(this.actButton);
+		this.actionBox.get_Controls().Add(this.directionBox);
+		this.actionBox.get_Controls().Add(this.action[3]);
+		this.actionBox.get_Controls().Add(this.action[2]);
+		this.actionBox.get_Controls().Add(this.action[1]);
+		this.actionBox.get_Controls().Add(this.action[0]);
+		this.actionBox.set_Location(new System.Drawing.Point(605, 150));
+		this.actionBox.set_Name("actionBox");
+		this.actionBox.set_Size(new System.Drawing.Size(190, 240));
+		this.actionBox.set_Text("Action");
+		this.actionBox.set_BackColor(System.Drawing.Color.get_Black());
+		this.actionBox.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.actionBox.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// actButton
+		// 
+		this.actButton.set_Location(new System.Drawing.Point(63, 210));
+		this.actButton.set_Name("actButton");
+		this.actButton.set_Size(new System.Drawing.Size(75, 25));
+		this.actButton.set_Text("&Act");
+		this.actButton.set_BackColor(System.Drawing.Color.get_Black());
+		this.actButton.get_FlatAppearance().set_BorderColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64)))));
+		this.actButton.get_FlatAppearance().set_MouseOverBackColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24))), ((int)(System.Int32)(((ubyte)24)))));
+		this.actButton.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.actButton.set_ForeColor(System.Drawing.Color.get_White());
+		this.actButton.add_Click(new System.EventHandler(this.actButton_Click));
+		// 
+		// directionBox
+		// 
+		this.directionBox.set_Location(new System.Drawing.Point(50, 100));
+		this.directionBox.set_Name("directionBox");
+		this.directionBox.set_Size(new System.Drawing.Size(98, 105));
+		this.directionBox.set_Text("Direction");
+		this.directionBox.set_BackColor(System.Drawing.Color.get_Black());
+		this.directionBox.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.directionBox.set_ForeColor(System.Drawing.Color.get_White());
+		// Comment this out if you want to use the Windows Form Designer
+		// since it doesn't understand it.
+		for (int i = 0; i < 6; i++)
+			this.directionBox.get_Controls().Add(direction[i]);
+		#region Stats
+		// 
+		// turnsBox
+		// 
+		this.turnsBox.set_Anchor((System.Windows.Forms.AnchorStyles)(
+			System.Windows.Forms.AnchorStyles.Top |
+			System.Windows.Forms.AnchorStyles.Right));
+		this.turnsBox.get_Controls().Add(this.turns);
+		this.turnsBox.set_Location(new System.Drawing.Point(605, 25));
+		this.turnsBox.set_Name("turnsBox");
+		this.turnsBox.set_Size(new System.Drawing.Size(90, 55));
+		this.turnsBox.set_Text("Turns");
+		this.turnsBox.set_BackColor(System.Drawing.Color.get_Black());
+		this.turnsBox.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.turnsBox.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// turns
+		// 
+		this.turns.set_AutoSize(true);
+		this.turns.set_Font(new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.turns.set_Location(new System.Drawing.Point(28, 20));
+		this.turns.set_Name("turns");
+		this.turns.set_Size(new System.Drawing.Size(18, 20));
+		this.turns.set_TabIndex(0);
+		this.turns.set_Text("0");
+		// 
+		// arrowsBox
+		// 
+		this.arrowsBox.set_Anchor((System.Windows.Forms.AnchorStyles)(
+			System.Windows.Forms.AnchorStyles.Top |
+			System.Windows.Forms.AnchorStyles.Right));
+		this.arrowsBox.get_Controls().Add(this.arrows);
+		this.arrowsBox.set_Location(new System.Drawing.Point(705, 25));
+		this.arrowsBox.set_Name("arrowsBox");
+		this.arrowsBox.set_Size(new System.Drawing.Size(90, 55));
+		this.arrowsBox.set_Text("Arrows");
+		this.arrowsBox.set_BackColor(System.Drawing.Color.get_Black());
+		this.arrowsBox.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.arrowsBox.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// arrows
+		// 
+		this.arrows.set_AutoSize(true);
+		this.arrows.set_Font(new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.arrows.set_Location(new System.Drawing.Point(28, 20));
+		this.arrows.set_Name("arrows");
+		this.arrows.set_Size(new System.Drawing.Size(18, 20));
+		this.arrows.set_TabIndex(0);
+		this.arrows.set_Text("0");
+		// 
+		// coinsBox
+		// 
+		this.coinsBox.set_Anchor((System.Windows.Forms.AnchorStyles)(
+			System.Windows.Forms.AnchorStyles.Top |
+			System.Windows.Forms.AnchorStyles.Right));
+		this.coinsBox.get_Controls().Add(this.coins);
+		this.coinsBox.set_Location(new System.Drawing.Point(605, 85));
+		this.coinsBox.set_Name("coinsBox");
+		this.coinsBox.set_Size(new System.Drawing.Size(90, 55));
+		this.coinsBox.set_Text("Coins");
+		this.coinsBox.set_BackColor(System.Drawing.Color.get_Black());
+		this.coinsBox.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.coinsBox.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// coins
+		// 
+		this.coins.set_AutoSize(true);
+		this.coins.set_Font(new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.coins.set_Location(new System.Drawing.Point(28, 20));
+		this.coins.set_Name("coins");
+		this.coins.set_Size(new System.Drawing.Size(18, 20));
+		this.coins.set_TabIndex(0);
+		this.coins.set_Text("0");
+		// 
+		// roomBox
+		// 
+		this.roomBox.set_Anchor((System.Windows.Forms.AnchorStyles)(
+			System.Windows.Forms.AnchorStyles.Top |
+			System.Windows.Forms.AnchorStyles.Right));
+		this.roomBox.get_Controls().Add(this.room);
+		this.roomBox.set_Location(new System.Drawing.Point(705, 85));
+		this.roomBox.set_Name("roomBox");
+		this.roomBox.set_Size(new System.Drawing.Size(90, 55));
+		this.roomBox.set_Text("Room");
+		this.roomBox.set_BackColor(System.Drawing.Color.get_Black());
+		this.roomBox.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.roomBox.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// room
+		// 
+		this.room.set_AutoSize(true);
+		this.room.set_Font(new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((ubyte)0)));
+		this.room.set_Location(new System.Drawing.Point(28, 20));
+		this.room.set_Name("room");
+		this.room.set_Size(new System.Drawing.Size(18, 20));
+		this.room.set_TabIndex(0);
+		this.room.set_Text("0");
+		#endregion
+		#region Menu
+		// 
+		// menu
+		// 
+		this.menu.get_Items().AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.gameToolStripMenuItem,
+            this.helpToolStripMenuItem}
+		);
+		this.menu.set_Location(new System.Drawing.Point(0, 0));
+		this.menu.set_Name("menu");
+		this.menu.set_Size(new System.Drawing.Size(800, 25));
+		// 
+		// gameToolStripMenuItem
+		// 
+		this.gameToolStripMenuItem.get_DropDownItems().AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newGameToolStripMenuItem,
+            this.highScoresToolStripMenuItem,
+            this.quitToolStripMenuItem}
+		);
+		this.gameToolStripMenuItem.set_Name("gameToolStripMenuItem");
+		this.gameToolStripMenuItem.set_Size(new System.Drawing.Size(46, 20));
+		this.gameToolStripMenuItem.set_Text("Game");
+		// 
+		// newGameToolStripMenuItem
+		// 
+		this.newGameToolStripMenuItem.set_Name("newGameToolStripMenuItem");
+		this.newGameToolStripMenuItem.set_Size(new System.Drawing.Size(141, 22));
+		this.newGameToolStripMenuItem.set_Text("New Game");
+		this.newGameToolStripMenuItem.add_Click(new System.EventHandler(this.onNewGame));
+		// 
+		// highScoresToolStripMenuItem
+		// 
+		this.highScoresToolStripMenuItem.set_Name("highScoresToolStripMenuItem");
+		this.highScoresToolStripMenuItem.set_Size(new System.Drawing.Size(141, 22));
+		this.highScoresToolStripMenuItem.set_Text("High Scores");
+		this.highScoresToolStripMenuItem.add_Click(new System.EventHandler(this.onShowHighScores));
+		// 
+		// quitToolStripMenuItem
+		// 
+		this.quitToolStripMenuItem.set_Name("quitToolStripMenuItem");
+		this.quitToolStripMenuItem.set_Size(new System.Drawing.Size(141, 22));
+		this.quitToolStripMenuItem.set_Text("Quit");
+		this.quitToolStripMenuItem.add_Click(new System.EventHandler(this.onQuit));
+		// 
+		// helpToolStripMenuItem
+		// 
+		this.helpToolStripMenuItem.get_DropDownItems().AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.instructionsToolStripMenuItem,
+            this.aboutToolStripMenuItem}
+		);
+		this.helpToolStripMenuItem.set_Name("helpToolStripMenuItem");
+		this.helpToolStripMenuItem.set_Size(new System.Drawing.Size(40, 20));
+		this.helpToolStripMenuItem.set_Text("Help");
+		// 
+		// instructionsToolStripMenuItem
+		// 
+		this.instructionsToolStripMenuItem.set_Name("instructionsToolStripMenuItem");
+		this.instructionsToolStripMenuItem.set_Size(new System.Drawing.Size(142, 22));
+		this.instructionsToolStripMenuItem.set_Text("Instructions");
+		// 
+		// aboutToolStripMenuItem
+		// 
+		this.aboutToolStripMenuItem.set_Name("aboutToolStripMenuItem");
+		this.aboutToolStripMenuItem.set_Size(new System.Drawing.Size(142, 22));
+		this.aboutToolStripMenuItem.set_Text("About");
+		#endregion
+		// 
+		// messages
+		// 
+		this.messages.set_Dock(DockStyle.Right);
+		this.messages.set_Location(new System.Drawing.Point(800, 0));
+		this.messages.set_Multiline(true);
+		this.messages.set_Name("messages");
+		this.messages.set_ReadOnly(true);
+		this.messages.set_TabStop(false);
+		this.messages.set_ScrollBars(System.Windows.Forms.ScrollBars.Vertical);
+		this.messages.set_Size(new System.Drawing.Size(200, 600));
+		this.messages.set_BackColor(System.Drawing.Color.get_Black());
+		this.messages.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// drawPanel
+		// 
+		this.drawPanel.set_Anchor(((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+					| System.Windows.Forms.AnchorStyles.Left)
+					| System.Windows.Forms.AnchorStyles.Right))));
+		this.drawPanel.set_Dock(DockStyle.Left);
+		this.drawPanel.set_Location(new System.Drawing.Point(0, 0));
+		this.drawPanel.set_Name("drawPanel");
+		this.drawPanel.set_Size(new System.Drawing.Size(600, 600));
+		this.drawPanel.set_BackColor(System.Drawing.Color.get_Black());
+		this.drawPanel.add_SizeChanged(new EventHandler(this.drawPanel.resized));
+		// 
+		// frames
+		// 
+		this.frames.set_Enabled(false);
+		this.frames.set_Interval(17);
+		this.frames.add_Tick(new EventHandler(drawPanel.repaint));
+		// 
+		// autoRotate
+		//
+		this.autoRotate.set_Anchor((System.Windows.Forms.AnchorStyles)(
+			System.Windows.Forms.AnchorStyles.Top |
+			System.Windows.Forms.AnchorStyles.Right));
+		this.autoRotate.set_Location(new Point(620, 400));
+		this.autoRotate.set_Name("autoRotate");
+		this.autoRotate.set_Size(new System.Drawing.Size(160, 20));
+		this.autoRotate.set_Text("&Rotate");
+		this.autoRotate.add_CheckedChanged(new EventHandler(drawPanel.toggleRotate));
+		this.autoRotate.set_Checked(false);
+		this.autoRotate.set_BackColor(System.Drawing.Color.get_Black());
+		this.autoRotate.get_FlatAppearance().set_BorderColor(System.Drawing.Color.FromArgb(((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64))), ((int)(System.Int32)(((ubyte)64)))));
+		this.autoRotate.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.autoRotate.set_ForeColor(System.Drawing.Color.get_White());
+		// 
+		// GraphicsEngine
+		// 
+		this.set_KeyPreview(true);
+		this.set_ClientSize(new System.Drawing.Size(1000, 600));
+		this.set_WindowState(FormWindowState.Maximized);
+//		this.set_BackgroundImage(Image.FromFile(DirectXPanel.RESOURCES + "parchment.gif"));
+		this.set_BackColor(Color.get_Black());
+		this.get_Controls().Add(this.drawPanel);
+		this.get_Controls().Add(this.messages);
+		this.get_Controls().Add(this.roomBox);
+		this.get_Controls().Add(this.coinsBox);
+		this.get_Controls().Add(this.arrowsBox);
+		this.get_Controls().Add(this.turnsBox);
+		this.get_Controls().Add(this.actionBox);
+		this.get_Controls().Add(this.menu);
+		this.get_Controls().Add(this.autoRotate);
+		this.set_MainMenuStrip(this.menu);
+		this.set_Name("GraphicsEngine");
+		this.set_StartPosition(System.Windows.Forms.FormStartPosition.CenterScreen);
+		this.set_Text("Hunt the Wumpus");
+		this.add_Load(new System.EventHandler(this.GraphicsEngine_Load));
+		this.add_Closed(new System.EventHandler(this.closed));
+		this.actionBox.ResumeLayout(false);
+		this.actionBox.PerformLayout();
+		this.turnsBox.ResumeLayout(false);
+		this.turnsBox.PerformLayout();
+		this.arrowsBox.ResumeLayout(false);
+		this.arrowsBox.PerformLayout();
+		this.coinsBox.ResumeLayout(false);
+		this.coinsBox.PerformLayout();
+		this.roomBox.ResumeLayout(false);
+		this.roomBox.PerformLayout();
+		this.menu.ResumeLayout(false);
+		this.menu.PerformLayout();
+		this.ResumeLayout(false);
+		this.PerformLayout();
+
+	}
+	#endregion
+
+	#region Event handlers
+
+	private void mainMenu_Click(Object sender, System.EventArgs e)
+	{
+		mainMenu();
+	}
+
+	private void actButton_Click(Object sender, System.EventArgs e)
+	{
+		int choice = 0, direction = 0;
+		if (this.action[0].get_Checked())
+		{
+			for (int i = 0; i < 6; i++)
+				if (this.direction[i].get_Checked())
+					direction = i;
+		}
+		else if (this.action[1].get_Checked())
+		{
+			choice = 10;
+			for (int i = 0; i < 6; i++)
+				if (this.direction[i].get_Checked())
+					direction = i;
+		}
+		if (this.action[2].get_Checked())
+		{
+			choice = 20;
+		}
+		if (this.action[3].get_Checked())
+		{
+			choice = 30;
+		}
+
+		gc.act(choice + direction);
+	}
+
+	private void GraphicsEngine_Load(Object sender, System.EventArgs e)
+	{
+//		WaitCallback repaintLoop = new WaitCallback(drawPanel.repaintLoop);
+//		ThreadPool.QueueUserWorkItem(repaintLoop);
+
+		frames.set_Enabled(true);
+		frames.Start();
+	}
+
+	private void closed(Object sender, System.EventArgs e)
+	{
+		frames.Stop();
+	}
+
+	private void disableDirections(Object sender, System.EventArgs e)
+	{
+		this.directionBox.set_Enabled(false);
+	}
+
+	private void enableDirections(Object sender, System.EventArgs e)
+	{
+		this.directionBox.set_Enabled(true);
+	}
+
+	private void onNewGame(Object s, System.EventArgs e)
+	{
+		reset();
+		gc.newGame();
+	}
+
+	private void onShowHighScores(Object s, System.EventArgs e)
+	{
+		this.showHighScores(-1);
+	}
+
+	private void onQuit(Object s, System.EventArgs e)
+	{
+		Application.Exit();
+	}
+
+	private void newDirection(Object s, System.EventArgs e)
+	{
+		drawPanel.repaint();
+	}
+
+	private void OnPaint(Object s, EventArgs e)
+	{
+		displayStats(gc.player);
+	}
+
+	protected boolean ProcessDialogKey(Keys key)
+	{
+		boolean handled = true;
+		int checked = 0;
+		switch (key)
+		{
+			case Keys.Down:
+				for (int i = 0; i < 4; i++)
+					if (action[i].get_Checked())
+						checked = i;
+				action[wrap(checked + 1, 0, 4)].set_Checked(true);
+				break;
+			case Keys.Up:
+				for (int i = 0; i < 4; i++)
+					if (action[i].get_Checked())
+						checked = i;
+				action[wrap(checked - 1, 0, 4)].set_Checked(true);
+				break;
+			case Keys.Right:
+				for (int i = 0; i < 6; i++)
+					if (direction[i].get_Checked())
+						checked = i;
+				if (directionBox.get_Enabled())
+				{
+					int i = checked + 1;
+					while (true)
+					{
+						if (direction[wrap(i, 0, 6)].get_Enabled())
+						{
+							direction[wrap(i, 0, 6)].set_Checked(true);
+							break;
+						}
+						else
+							i++;
+					};
+				}
+				break;
+			case Keys.Left:
+				for (int i = 0; i < 6; i++)
+					if (direction[i].get_Checked())
+						checked = i;
+				if (directionBox.get_Enabled())
+				{
+					int i = checked - 1;
+					while (true)
+					{
+						if (direction[wrap(i, 0, 6)].get_Enabled())
+						{
+							direction[wrap(i, 0, 6)].set_Checked(true);
+							break;
+						}
+						else
+							i--;
+					};
+				}
+				break;
+			case Keys.Enter:
+				actButton.PerformClick();
+				break;
+			case Keys.Control | Keys.Left:
+				drawPanel.left();
+				break;
+			case Keys.Control | Keys.Right:
+				drawPanel.right();
+				break;
+			case Keys.PageUp:
+				drawPanel.zoomIn();
+				break;
+			case Keys.PageDown:
+				drawPanel.zoomOut();
+				break;
+			case Keys.Control | Keys.Down:
+				drawPanel.angleDown();
+				break;
+			case Keys.Control | Keys.Up:
+				drawPanel.angleUp();
+				break;
+			case Keys.F1:
+				drawPanel.toggleCheating();
+				break;
+			case Keys.F2:
+				drawPanel.detailedView();
+				break;
+			case Keys.F3:
+				drawPanel.tacticalView();
+				break;
+			case Keys.F4:
+				drawPanel.strategicView();
+				break;
+			case Keys.F11:
+				if (!fullscreen)
+				{
+					this.set_FormBorderStyle(FormBorderStyle.None);
+					this.set_Left(Screen.get_PrimaryScreen().get_Bounds().get_Width() / 2 - this.get_Width() / 2);
+					this.set_Top(Screen.get_PrimaryScreen().get_Bounds().get_Height() / 2 - this.get_Height() / 2);
+
+					fullscreen = true;
+				}
+				else
+				{
+					this.set_FormBorderStyle(FormBorderStyle.Sizable);
+
+					fullscreen = false;
+				}
+				break;
+			default:
+				handled = false;
+		}
+
+		return handled;
+	}
+
+	#endregion
+
+	private int wrap(int x, int lower, int upper)
+	{
+		if (x < lower)
+		{
+			return upper - (lower - x) % (upper - lower);
+		}
+		else if (x >= upper)
+		{
+			return lower + (x - upper) % (upper - lower);
+		}
+		else
+		{
+			return x;
+		}
+	}
+}
+

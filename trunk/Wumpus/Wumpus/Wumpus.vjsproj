@@ -1,0 +1,172 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{ED8D58E0-4720-4A61-8064-BE8DA6E11DE8}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Wumpus</RootNamespace>
+    <AssemblyName>Wumpus</AssemblyName>
+    <WarningLevel>4</WarningLevel>
+    <StartupObject>Wumpus.Program</StartupObject>
+    <ManifestCertificateThumbprint>399A97785249D714A29635177547DE3527D22211</ManifestCertificateThumbprint>
+    <ManifestKeyFile>Wumpus_TemporaryKey.pfx</ManifestKeyFile>
+    <GenerateManifests>true</GenerateManifests>
+    <SignManifests>true</SignManifests>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <AutorunEnabled>true</AutorunEnabled>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="Microsoft.DirectX.Direct3D, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="Microsoft.DirectX.Direct3DX, Version=1.0.2904.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="App.ico" />
+    <Compile Include="Cave.jsl" />
+    <Compile Include="CaveDialog.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Direction.jsl" />
+    <Compile Include="DirectXPanel.jsl">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Exceptions.jsl" />
+    <Compile Include="FrameworkTimer.jsl" />
+    <Compile Include="GameControl.jsl" />
+    <Compile Include="GraphicsEngine.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Hazard.jsl" />
+    <Compile Include="HighScore.jsl" />
+    <Compile Include="HighScoreForm.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LoadingSplash.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainMenu.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Map.jsl" />
+    <Compile Include="NameDialog.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Player.jsl" />
+    <Compile Include="Program.jsl" />
+    <Compile Include="Properties\AssemblyInfo.jsl" />
+    <Compile Include="Properties\Resources.Designer.jsl">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Room.jsl" />
+    <Compile Include="Trivia.jsl" />
+    <Compile Include="TriviaDialog.jsl">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TriviaQuestion.jsl" />
+    <Compile Include="Wumpus.jsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MainMenu.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>MainMenu.jsl</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.jsl</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TriviaDialog.resx">
+      <DependentUpon>TriviaDialog.jsl</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Wumpus_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <PublishFile Include="Microsoft.DirectX">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Prerequisite</PublishState>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Microsoft.DirectX.Direct3D">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Prerequisite</PublishState>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Microsoft.DirectX.Direct3DX">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Prerequisite</PublishState>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.JSharp.2.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft Visual J# .NET Redistributable Package 2.0</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualJSharp.targets" />
+  <PropertyGroup>
+    <ApplicationIcon>App.ico</ApplicationIcon>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,119 @@
+package Wumpus;
+
+import System.Collections.Generic.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import System.Drawing.*;
+import System.Windows.Forms.*;
+
+/**
+ * Summary description for CaveDialog.
+ */
+public class CaveDialog extends System.Windows.Forms.Form
+{
+	/**
+	 * Required designer variable.
+	 */
+	private System.ComponentModel.IContainer components;
+	private Label caveLabel;
+	private ComboBox cave;
+	private Button ok;
+
+	private Cave[] caves;
+
+	public CaveDialog(Cave[] caves)
+	{
+		//
+		// Required for Windows Form Designer support
+		//
+		InitializeComponent();
+
+		this.caves = caves;
+
+		for (int i = 0; i < caves.length; i++)
+			cave.get_Items().Add(caves[i]);
+		cave.set_SelectedIndex(0);
+	}
+
+	public Cave getCave()
+	{
+		return caves[cave.get_SelectedIndex()];
+	}
+
+	#region Windows Form Designer generated code
+	/**
+     * Clean up any resources being used.
+     */
+	protected void Dispose(boolean disposing)
+	{
+		if (disposing)
+		{
+			if (components != null)
+			{
+				components.Dispose();
+			}
+		}
+		super.Dispose(disposing);
+	}
+
+	/**
+	 * Required method for Designer support - do not modify
+	 * the contents of this method with the code editor.
+	 */
+	private void InitializeComponent()
+	{
+		this.caveLabel = new System.Windows.Forms.Label();
+		this.ok = new System.Windows.Forms.Button();
+		this.cave = new System.Windows.Forms.ComboBox();
+		this.SuspendLayout();
+		// 
+		// caveLabel
+		// 
+		this.caveLabel.set_AutoSize(true);
+		this.caveLabel.set_Location(new System.Drawing.Point(60, 15));
+		this.caveLabel.set_Name("caveLabel");
+		this.caveLabel.set_Size(new System.Drawing.Size(35, 13));
+		this.caveLabel.set_TabIndex(2);
+		this.caveLabel.set_Text("Cave:");
+		// 
+		// ok
+		// 
+		this.ok.set_DialogResult(System.Windows.Forms.DialogResult.OK);
+		this.ok.set_Location(new System.Drawing.Point(104, 51));
+		this.ok.set_Name("ok");
+		this.ok.set_Size(new System.Drawing.Size(75, 23));
+		this.ok.set_TabIndex(1);
+		this.ok.set_Text("OK");
+		this.ok.set_UseVisualStyleBackColor(true);
+		// 
+		// cave
+		// 
+		this.cave.set_FormattingEnabled(true);
+		this.cave.set_Location(new System.Drawing.Point(101, 12));
+		this.cave.set_Name("cave");
+		this.cave.set_Size(new System.Drawing.Size(121, 21));
+		this.cave.set_DropDownStyle(ComboBoxStyle.DropDownList);
+		this.cave.set_TabIndex(3);
+		// 
+		// CaveDialog
+		// 
+		this.set_AcceptButton(this.ok);
+		this.set_ClientSize(new System.Drawing.Size(282, 86));
+		this.set_ControlBox(false);
+		this.get_Controls().Add(this.cave);
+		this.get_Controls().Add(this.ok);
+		this.get_Controls().Add(this.caveLabel);
+		this.set_MaximizeBox(false);
+		this.set_MinimizeBox(false);
+		this.set_Name("CaveDialog");
+		this.set_ShowInTaskbar(false);
+		this.set_SizeGripStyle(System.Windows.Forms.SizeGripStyle.Hide);
+		this.set_StartPosition(System.Windows.Forms.FormStartPosition.CenterScreen);
+		this.set_Text("Hunt the Wumpus");
+		this.set_TopMost(true);
+		this.ResumeLayout(false);
+		this.PerformLayout();
+
+	}
+	#endregion
+}

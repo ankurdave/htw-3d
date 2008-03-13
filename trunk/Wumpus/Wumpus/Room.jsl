@@ -1,0 +1,74 @@
+package Wumpus;
+
+public class Room
+{
+	private boolean[] connections;
+	private Room[] neighbors;
+	private int roomNumber;
+	private Cave cave;
+
+	public Room(int roomNumber)
+	{
+		connections = new boolean[NUMBER_OF_CONNECTIONS];
+		neighbors = new Room[NUMBER_OF_CONNECTIONS];
+		this.roomNumber = roomNumber;
+	}
+
+	public Room(int roomNumber, boolean[] connections)
+	{
+		this.connections = connections;
+		neighbors = new Room[NUMBER_OF_CONNECTIONS];
+		this.roomNumber = roomNumber;
+	}
+
+	public boolean[] getTunnels()
+	{
+		return connections;
+	}
+
+	public boolean getTunnelInDirection(Direction dir)
+	{
+		return connections[dir.getDirection()];
+	}
+
+	public int getRoomNumber()
+	{
+		return roomNumber;
+	}
+
+	public String toString()
+	{
+		return "room " + roomNumber;
+	}
+
+	public Room getAdjacentRoom(Direction dir)
+	{
+		return cave.getAdjacentRoom(this, dir);
+	}
+
+	public Room[] getAdjacentRooms()
+	{
+		return neighbors;
+	}
+
+	protected void instantiate(Cave c)
+	{
+		cave = c;
+		for (int i = 0; i < NUMBER_OF_CONNECTIONS; i++)
+		{
+			neighbors[i] = cave.getAdjacentRoom(this, new Direction(i));
+		}
+	}
+
+	public boolean equals(Object o)
+	{
+		if (o == null)
+			return false;
+		Room that = (Room)o;
+		return this.getRoomNumber() == that.getRoomNumber();
+	}
+
+	public static final int NUMBER_OF_CONNECTIONS = 6;
+}
+
+

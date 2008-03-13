@@ -1,0 +1,212 @@
+package Wumpus;
+
+import java.io.*;
+import java.util.ArrayList;
+
+public class Cave
+{
+
+	private Room[][] rooms;
+	private File cave;
+	private String name;
+
+	public Cave()
+	{
+		rooms = new Room[NUMBER_OF_COLUMNS][NUMBER_OF_ROWS];
+	}
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public String getFileName()
+	{
+		try
+		{
+			return cave.getCanonicalPath();
+		}
+		catch (IOException e)
+		{
+			return "unopened file";
+		}
+	}
+
+	public void load(String fileName) throws IOException
+	{
+		cave = new File(fileName);
+		BufferedReader r = new BufferedReader(new FileReader(cave));
+		String line;
+		String[] connections = new String[Room.NUMBER_OF_CONNECTIONS];
+		boolean[] b = new boolean[Room.NUMBER_OF_CONNECTIONS];
+		int count = -1;
+		int count2 = 0;
+
+		while ((line = r.readLine()) != null)
+		{
+			if (count == -1)
+			{
+				name = line;
+				count = 0;
+			}
+			else
+			{
+				connections = split(line);
+				for (int i = 0; i < connections.length; i++)
+				{
+					b[i] = connections[i].equals("1");
+				}
+				rooms[count2][count] = new Room(count + (NUMBER_OF_ROWS * count2), (boolean[])b.clone());
+				count++;
+			}
+			if (count == NUMBER_OF_ROWS)
+			{
+				count = 0;
+				count2++;
+			}
+		}
+		for (int j = 0; j < NUMBER_OF_ROOMS; j++)
+		{
+			getRoomAt(j).instantiate(this);
+		}
+	}
+
+	public Room getRoomAt(int roomNumber)
+	{
+		int x = determineX(roomNumber);
+		int y = determineY(roomNumber);
+		return getRoomAt(x, y);
+	}
+
+	public Room getAdjacentRoom(Room room, Direction direction)
+	{
+		if (!room.getTunnelInDirection(direction))
+			return null;
+
+		int x = determineX(room.getRoomNumber());
+		int y = determineY(room.getRoomNumber());
+		int dir = direction.getDirection();
+
+		if (dir == Direction.NORTH)
+			y--;
+		else if (dir == Direction.SOUTH)
+			y++;
+		else if (dir == Direction.NORTHEAST)
+		{
+			y -= (1 - x % 2);
+			x++;
+		}
+		else if (dir == Direction.NORTHWEST)
+		{
+			y -= (1 - x % 2);
+			x--;
+		}
+		else if (dir == Direction.SOUTHEAST)
+		{
+			y += x % 2;
+			x++;
+		}
+		else if (dir == Direction.SOUTHWEST)
+		{
+			y += x % 2;
+			x--;
+		}
+
+		return getRoomAt(x, y);
+	}
+
+	public Room[] getAdjacentRooms(Room room)
+	{
+		Room[] r = new Room[Room.NUMBER_OF_CONNECTIONS];
+		for (int i = 0; i < Room.NUMBER_OF_CONNECTIONS; i++)
+		{
+			r[i] = getAdjacentRoom(room, new Direction(i));
+		}
+		return r;
+	}
+
+	public Room randomRoom()
+	{
+		return rooms[(int)(Math.random() * NUMBER_OF_COLUMNS)][(int)(Math.random() * NUMBER_OF_ROWS)];
+	}
+
+	public Room randomRoomExcluding(Room[] rooms)
+	{
+		Room rand;
+		do
+		{
+			rand = randomRoom();
+		} while (contains(rooms, rand));
+		return rand;
+	}
+
+	private boolean contains(Object[] haystack, Object needle)
+	{
+		for (int i = 0; i < haystack.length; i++)
+		{
+			if (haystack[i] == null)
+				continue;
+			if (haystack[i].equals(needle))
+				return true;
+		}
+		return false;
+	}
+
+
+	private Room getRoomAt(int xcoord, int ycoord)
+	{
+		int x = xcoord;
+		int y = ycoord;
+
+		while (x >= NUMBER_OF_COLUMNS)
+			x -= NUMBER_OF_COLUMNS;
+
+		while (x < 0)
+			x += NUMBER_OF_COLUMNS;
+
+		while (y >= NUMBER_OF_ROWS)
+			y -= NUMBER_OF_ROWS;
+
+		while (y < 0)
+			y += NUMBER_OF_ROWS;
+
+		return rooms[x][y];
+	}
+
+	private int determineX(int roomNumber)
+	{
+		return (roomNumber / NUMBER_OF_ROWS);
+	}
+
+	private int determineY(int roomNumber)
+	{
+		return (roomNumber - (NUMBER_OF_ROWS * determineX(roomNumber)));
+	}
+
+	private String[] split(String target)
+	{
+		String expression = target;
+		ArrayList words = new ArrayList();
+		while (expression.indexOf("\t") != -1)
+		{
+			words.add(expression.substring(0, expression.indexOf("\t")));
+			expression = expression.substring(expression.indexOf("\t") + 1);
+		}
+		words.add(expression);
+		String[] result = new String[words.size()];
+		for (int i = 0; i < words.size(); i++)
+		{
+			result[i] = (String)words.get(i);
+		}
+		return result;
+	}
+
+	public String toString()
+	{
+		return getName();
+	}
+
+	public static final int NUMBER_OF_ROOMS = 30;
+	public static final int NUMBER_OF_COLUMNS = 6;
+	public static final int NUMBER_OF_ROWS = 5;
+}

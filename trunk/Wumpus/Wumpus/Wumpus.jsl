@@ -1,0 +1,26 @@
+package Wumpus;
+
+public class Wumpus
+{
+	private Room location;
+
+	public Wumpus(Room r)
+	{
+		location = r;
+	}
+	public Room getLocation()
+	{
+		return location;
+	}
+	public void setLocation(Room r)
+	{
+		location = r;
+	}
+
+	public String toString()
+	{
+		return "Wumpus is at " + location;
+	}
+}
+
+

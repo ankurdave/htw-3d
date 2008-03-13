@@ -1,0 +1,140 @@
+package Wumpus;
+
+import System.Collections.Generic.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import System.Drawing.*;
+import System.Windows.Forms.*;
+
+class TriviaDialog extends System.Windows.Forms.Form
+{
+	public Label question;
+	public RadioButton[] answers;
+	private Button submit;
+	private int choice;
+	/**
+	 * Required designer variable.
+	 */
+	private System.ComponentModel.IContainer components;
+
+	public TriviaDialog(TriviaQuestion q)
+	{
+		answers = new RadioButton[4];
+		for (int i = 0; i < 4; i++)
+		{
+			answers[i] = new RadioButton();
+			answers[i].set_Location(new Point(50, i * 30 + 80));
+			answers[i].set_BackColor(Color.get_Transparent());
+			answers[i].set_Size(new Size(400, 30));
+		}
+		answers[0].set_Checked(true);
+
+		InitializeComponent();
+
+		question.set_Text(q.getQuestion());
+		String[] answerText = q.getAnswers();
+		for (int i = 0; i < 4; i++)
+			answers[i].set_Text("&" + (char)((int)'A' + i) + ". " + answerText[i]);
+	}
+
+	#region Windows Form Designer generated code
+	/**
+        * Clean up any resources being used.
+        */
+	protected void Dispose(boolean disposing)
+	{
+		if (disposing)
+		{
+			if (components != null)
+			{
+				components.Dispose();
+			}
+		}
+		super.Dispose(disposing);
+	}
+
+	/**
+	 * Required method for Designer support - do not modify
+	 * the contents of this method with the code editor.
+	 */
+	private void InitializeComponent()
+	{
+		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(TriviaDialog.class.ToType());
+		this.question = new System.Windows.Forms.Label();
+		this.submit = new System.Windows.Forms.Button();
+		this.SuspendLayout();
+		// 
+		// question
+		// 
+		this.question.set_BackColor(System.Drawing.Color.get_Transparent());
+		this.question.set_Location(new System.Drawing.Point(50, 38));
+		this.question.set_Name("question");
+		this.question.set_Size(new System.Drawing.Size(400, 60));
+		this.question.set_TabIndex(0);
+		this.question.set_Text("question");
+		this.question.set_AutoEllipsis(true);
+		// 
+		// submit
+		// 
+		this.submit.set_Anchor(((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+					| System.Windows.Forms.AnchorStyles.Right))));
+		this.submit.set_BackColor(System.Drawing.Color.get_Transparent());
+		this.submit.get_FlatAppearance().set_BorderSize(0);
+		this.submit.set_FlatStyle(System.Windows.Forms.FlatStyle.Flat);
+		this.submit.set_Location(new System.Drawing.Point(233, 193));
+		this.submit.set_Name("submit");
+		this.submit.set_Size(new System.Drawing.Size(66, 24));
+		this.submit.set_TabIndex(9);
+		this.submit.set_Text("&Submit");
+		this.submit.set_UseVisualStyleBackColor(false);
+		this.submit.add_Click(new System.EventHandler(this.submit_Click));
+		// 
+		// TriviaDialog
+		// 
+		this.set_BackgroundImage(((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage"))));
+		this.set_ClientSize(new System.Drawing.Size(521, 239));
+		this.get_Controls().Add(this.submit);
+		this.set_AcceptButton(this.submit);
+		// Comment this out if you want to use Windows Form Designer, since it doesn't understand it.
+		for (int i = 0; i < 4; i++)
+			this.get_Controls().Add(this.answers[i]);
+		this.get_Controls().Add(this.question);
+		this.set_Name("TriviaDialog");
+		this.set_StartPosition(System.Windows.Forms.FormStartPosition.Manual);
+		this.set_Location(new Point());
+		this.set_Text("Hunt the Wumpus");
+		this.set_ShowInTaskbar(false);
+		this.add_FormClosed(new System.Windows.Forms.FormClosedEventHandler(this.trivia_FormClosed));
+		this.set_FormBorderStyle(FormBorderStyle.FixedDialog);
+		this.set_MinimizeBox(false);
+		this.set_MaximizeBox(false);
+		this.set_ControlBox(false);
+		this.SetBounds(0, Screen.GetWorkingArea(this).get_Height() - this.get_Height(), this.get_Width(), this.get_Height());
+		this.ResumeLayout(false);
+		this.PerformLayout();
+	}
+	#endregion
+
+	private void submit_Click(Object sender, System.EventArgs e)
+	{
+		choice = 0;
+		for (int i = 0; i < 4; i++)
+			if (answers[i].get_Checked())
+				choice = i;
+		this.set_DialogResult(DialogResult.OK);
+	}
+
+	private void trivia_FormClosed(Object sender, FormClosedEventArgs e)
+	{
+		choice = 0;
+		for (int i = 0; i < 4; i++)
+			if (answers[i].get_Checked())
+				choice = i;
+		this.set_DialogResult(DialogResult.OK);
+	}
+
+	public int getChoice()
+	{
+		return choice;
+	}
+}

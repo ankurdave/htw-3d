@@ -1,0 +1,899 @@
+package Wumpus;
+
+import System.Windows.Forms.*;
+import System.*;
+import System.Drawing.*;
+import System.Collections.*;
+import System.ComponentModel.*;
+import System.Data.*;
+import Microsoft.DirectX.*;
+import Microsoft.DirectX.Direct3D.*;
+import System.Runtime.InteropServices.*;
+import java.lang.Math;
+import System.Collections.Generic.*;
+
+public class DirectXPanel extends Panel
+{
+	private GraphicsEngine ge;
+
+	private Queue<Action> actions;
+
+	// Meshes
+	private Mesh person;
+	private Material[] personMaterials;
+	private Texture[] personTextures;
+	private Mesh personShoot;
+	private Material[] personShootMaterials;
+	private Texture[] personShootTextures;
+	private Mesh arrow;
+	private Material[] arrowMaterials;
+	private Texture[] arrowTextures;
+	private Mesh wall;
+	private Material[] wallMaterials;
+	private Texture[] wallTextures;
+	private Mesh tunnel;
+	private Material[] tunnelMaterials;
+	private Texture[] tunnelTextures;
+	private Mesh wumpus;
+	private Material[] wumpusMaterials;
+	private Texture[] wumpusTextures;
+	private Mesh wumpusHeart;
+	private Material[] wumpusHeartMaterials;
+	private Texture[] wumpusHeartTextures;
+	private Mesh bat;
+	private Material[] batMaterials;
+	private Texture[] batTextures;
+	private Mesh[] roomNumbers;
+	private Mesh roomNumber;
+	private Material numberMaterial;
+	private float offset = 0.0f;
+	private float offsetDown = 0.0f;
+	private boolean autoRotate = false;
+
+	private int dir = 0;
+
+	private static final int SIDES = 6;
+
+	private Room room;
+
+	public boolean maximizeArea = false;
+
+	public static final String RESOURCES = "resources\\";
+
+	private Device device;
+	private float angle = 0.0f;
+
+	private boolean deviceLost;
+	private PresentParameters[] presentParams;
+
+	private static final float FAST_STEP = 0.15f;
+	private static final float SLOW_STEP = 0.05f;
+
+	public DirectXPanel()
+	{
+		super();
+
+		this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque, true);
+
+		InitializeGraphics();
+
+		roomNumbers = new Mesh[6];
+		numberMaterial = new Material();
+		numberMaterial.set_Diffuse(Color.get_White());
+		numberMaterial.set_Ambient(Color.get_White());
+
+		actions = new Queue<Action>();
+	}
+
+	public void setGraphicsEngine(GraphicsEngine ge)
+	{
+		this.ge = ge;
+	}
+	
+	public void InitializeGraphics()
+	{
+		// Checks device capabilities.
+		int adapterOrdinal = Manager.get_Adapters().get_Default().get_Adapter();
+		CreateFlags flags = CreateFlags.SoftwareVertexProcessing;
+		Caps caps = Manager.GetDeviceCaps(adapterOrdinal, DeviceType.Hardware);
+		if (caps.get_DeviceCaps().get_SupportsHardwareTransformAndLight())
+			flags = CreateFlags.HardwareVertexProcessing;
+		if (caps.get_DeviceCaps().get_SupportsPureDevice())
+			flags |= CreateFlags.PureDevice;
+		presentParams = new PresentParameters[1];
+		presentParams[0] = new PresentParameters();
+		presentParams[0].set_Windowed(true);
+		presentParams[0].set_SwapEffect(SwapEffect.Discard);
+		presentParams[0].set_AutoDepthStencilFormat(DepthFormat.D16);
+		presentParams[0].set_EnableAutoDepthStencil(true);
+		presentParams[0].set_MultiSample(MultiSampleType.TwoSamples);
+
+		// Creates the device.
+		device = new Device(adapterOrdinal, DeviceType.Hardware, this, flags, presentParams);
+		device.add_DeviceReset(new EventHandler(this.OnDeviceReset));
+		device.add_DeviceLost(new EventHandler(this.OnDeviceLost));
+
+		// Loads the meshes.
+		try
+		{
+			System.err.print("Loading meshes...");
+			loadPerson(RESOURCES + "person.x");
+			loadPersonShoot(RESOURCES + "personshoot.x");
+			loadArrow(RESOURCES + "arrow.x");
+			loadWall(RESOURCES + "wall.x");
+			loadTunnel(RESOURCES + "tunnel.x");
+			loadWumpus(RESOURCES + "wumpus.x");
+			loadWumpusHeart(RESOURCES + "wumpus-heart.x");
+			loadBat(RESOURCES + "bat.x");
+			System.err.println("done.");
+		}
+		catch (Direct3DXException e)
+		{
+			ge.fatalError("Can't open mesh files: " + e.get_Message());
+		}
+
+		SetupCamera();
+	}
+
+	#region Meshes
+	private void loadPerson(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our person
+		person = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			personMaterials = new Material[mtrl.length];
+			personTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				personMaterials[i] = mtrl[i].get_Material3D();
+				if ((mtrl[i].get_TextureFilename() != null) && (mtrl[i].get_TextureFilename() != ""))
+				{
+					// We have a texture, try to load it
+					personTextures[i] = TextureLoader.FromFile(device, RESOURCES + mtrl[i].get_TextureFilename());
+				}
+			}
+		}
+	}
+
+	private void loadPersonShoot(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our person
+		personShoot = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			personShootMaterials = new Material[mtrl.length];
+			personShootTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				personShootMaterials[i] = mtrl[i].get_Material3D();
+				if ((mtrl[i].get_TextureFilename() != null) && (mtrl[i].get_TextureFilename() != ""))
+				{
+					// We have a texture, try to load it
+					personShootTextures[i] = TextureLoader.FromFile(device, RESOURCES + mtrl[i].get_TextureFilename()); ;
+				}
+			}
+		}
+	}
+
+	private void loadArrow(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our arrow
+		arrow = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			arrowMaterials = new Material[mtrl.length];
+			arrowTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				arrowMaterials[i] = mtrl[i].get_Material3D();
+				if ((mtrl[i].get_TextureFilename() != null) && (mtrl[i].get_TextureFilename() != ""))
+				{
+					// We have a texture, try to load it
+					arrowTextures[i] = TextureLoader.FromFile(device, RESOURCES + mtrl[i].get_TextureFilename()); ;
+				}
+			}
+		}
+	}
+
+
+	private void loadWall(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our wall
+		wall = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			wallMaterials = new Material[mtrl.length];
+			wallTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				wallMaterials[i] = mtrl[i].get_Material3D();
+				wallTextures[i] = TextureLoader.FromFile(device, RESOURCES + "brick.jpg");
+			}
+		}
+	}
+
+	private void loadTunnel(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our tunnel
+		tunnel = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			tunnelMaterials = new Material[mtrl.length];
+			tunnelTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				tunnelMaterials[i] = mtrl[i].get_Material3D();
+				tunnelTextures[i] = TextureLoader.FromFile(device, RESOURCES + "brick.jpg");
+			}
+		}
+	}
+
+	private void loadWumpus(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our wumpus
+		wumpus = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			wumpusMaterials = new Material[mtrl.length];
+			wumpusTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				wumpusMaterials[i] = mtrl[i].get_Material3D();
+				if ((mtrl[i].get_TextureFilename() != null) && (mtrl[i].get_TextureFilename() != ""))
+				{
+					// We have a texture, try to load it
+					wumpusTextures[i] = TextureLoader.FromFile(device, RESOURCES + mtrl[i].get_TextureFilename()); ;
+				}
+			}
+		}
+	}
+
+	private void loadWumpusHeart(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our wumpusHeart
+		wumpusHeart = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			wumpusHeartMaterials = new Material[mtrl.length];
+			wumpusHeartTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				wumpusHeartMaterials[i] = mtrl[i].get_Material3D();
+				if ((mtrl[i].get_TextureFilename() != null) && (mtrl[i].get_TextureFilename() != ""))
+				{
+					// We have a texture, try to load it
+					wumpusHeartTextures[i] = TextureLoader.FromFile(device, RESOURCES + mtrl[i].get_TextureFilename()); ;
+				}
+			}
+		}
+	}
+
+	private void loadBat(String file)
+	{
+		ExtendedMaterial[] mtrl = null;
+
+		// Load our bat
+		bat = Mesh.FromFile(file, MeshFlags.Managed, device, mtrl);
+
+		// If we have any materials, store them
+		if ((mtrl != null) && (mtrl.length > 0))
+		{
+			batMaterials = new Material[mtrl.length];
+			batTextures = new Texture[mtrl.length];
+
+			// Store each material and texture
+			for (int i = 0; i < mtrl.length; i++)
+			{
+				batMaterials[i] = mtrl[i].get_Material3D();
+				if ((mtrl[i].get_TextureFilename() != null) && (mtrl[i].get_TextureFilename() != ""))
+				{
+					// We have a texture, try to load it
+					batTextures[i] = TextureLoader.FromFile(device, RESOURCES + mtrl[i].get_TextureFilename()); ;
+				}
+			}
+		}
+	}
+	#endregion
+
+	private void SetupCamera()
+	{
+		device.get_RenderState().set_CullMode(Cull.None);
+		float zoom = 2.5f, height = 3.5f;
+		device.get_Transform().set_Projection(Matrix.PerspectiveFovLH((float)Math.PI / 4, this.get_Width() / this.get_Height(), 0.5f, 100.0f));
+		device.get_Transform().set_View(Matrix.LookAtLH(
+			new Vector3((float)Math.sin(angle / zoom) * zoom, height, (float)Math.cos(angle / zoom) * zoom),
+			new Vector3(0, 0, 0),
+			new Vector3(0, 1, 0)));
+
+		if (device.get_DeviceCaps().get_MaxActiveLights() <= 0)
+			device.get_RenderState().set_Lighting(false);
+		if (device.get_DeviceCaps().get_MaxActiveLights() >= 1)
+		{
+			device.get_Lights().get_Item(0).set_Type(LightType.Point);
+			device.get_Lights().get_Item(0).set_Position(new Vector3(-3, 2, -3));
+			device.get_Lights().get_Item(0).set_Diffuse(Color.get_White());
+			device.get_Lights().get_Item(0).set_Attenuation0(3);
+			device.get_Lights().get_Item(0).set_Range(20);
+			device.get_Lights().get_Item(0).Update();
+			device.get_Lights().get_Item(0).set_Enabled(true);
+		}
+		if (device.get_DeviceCaps().get_MaxActiveLights() >= 2)
+		{
+			device.get_Lights().get_Item(1).set_Type(LightType.Point);
+			device.get_Lights().get_Item(1).set_Position(new Vector3(3, 2, 3));
+			device.get_Lights().get_Item(1).set_Diffuse(Color.get_White());
+			device.get_Lights().get_Item(1).set_Attenuation0(3);
+			device.get_Lights().get_Item(1).set_Range(20);
+			device.get_Lights().get_Item(1).Update();
+			device.get_Lights().get_Item(1).set_Enabled(true);
+		}
+
+	}
+
+	private void OnDeviceReset(Object s, EventArgs e)
+	{
+		System.err.println("Device reset.");
+		SetupCamera();
+	}
+
+	private void OnDeviceLost(Object s, EventArgs e)
+	{
+		System.err.println("Device lost.");
+	}
+
+	public void repaint()
+	{
+		if (deviceLost)
+			RecoverDevice();
+		if (deviceLost)
+		{
+			System.err.println("Recovery failed, abandoning repaint.");
+			return;
+		}
+
+		if (autoRotate)
+			angle += SLOW_STEP;
+
+		for (int i = 0; i < 6; i++)
+			if (ge.direction[i].get_Checked())
+				dir = i;
+
+		device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.get_Black(), 1.0f, 0);
+
+		SetupCamera();
+
+		device.BeginScene();
+
+		Action next = null;
+		if (actions.get_Count() > 0)
+		{
+			next = actions.Peek();
+			if (next.expired())
+				actions.Dequeue();
+			else
+				next.tick();
+		}
+
+		drawCave(0, 0, next);
+
+		device.EndScene();
+
+		try
+		{
+			device.Present();
+		}
+		catch (DeviceLostException e)
+		{
+			deviceLost = true;
+			System.err.println("Device lost.");
+		}
+
+		this.Invalidate();
+	}
+
+	public void repaint(Object s, EventArgs e)
+	{
+		repaint();
+	}
+
+	private void OnRepaint(Object s, EventArgs e)
+	{
+		repaint();
+	}
+
+	public void repaintLoop(Object s)
+	{
+		while (true)
+		{
+			repaint();
+		}
+	}
+
+	private void RecoverDevice()
+	{
+		System.err.println("Attempting recovery...");
+		int res = 0;
+		device.CheckCooperativeLevel(res);
+		ResultCode rc = (ResultCode)res;
+		if (rc == ResultCode.DeviceLost)
+		{ }
+		else if (rc == ResultCode.DeviceNotReset)
+		{
+			try
+			{
+				device.Reset(presentParams);
+				deviceLost = false;
+				System.err.println("Device recovered.");
+			}
+			catch (DeviceLostException e)
+			{ }
+		}
+	}
+
+	private void drawMesh(float yaw, float pitch, float roll, float x, float y, float z, float scaleX, float scaleY, float scaleZ, Mesh mesh, Material[] meshMaterials, Texture[] meshTextures)
+	{
+		if (mesh == null)
+		{
+			System.err.println("Null mesh.");
+			return;
+		}
+
+		device.get_Transform().set_World(
+			Matrix.Multiply(
+				Matrix.Scaling(new Vector3(scaleX, scaleY, scaleZ)),
+				Matrix.Multiply(
+					Matrix.RotationYawPitchRoll(yaw, pitch, roll),
+					Matrix.Translation(new Vector3(x, y, z)))
+			));
+		if (meshMaterials != null)
+			for (int i = 0; i < meshMaterials.length; i++)
+			{
+				device.set_Material(meshMaterials[i]);
+				device.SetTexture(0, meshTextures[i]);
+				mesh.DrawSubset(i);
+			}
+		else
+		{
+			device.set_Material(numberMaterial);
+			device.SetTexture(0, null);
+			mesh.DrawSubset(0);
+		}
+	}
+
+	private void drawCave(float x, float y, Action next)
+	{
+		if (next != null)
+		{
+			switch (next.getAction())
+			{
+				case Action.SET_ROOM:
+					setRoomHelper(next.getRoom());
+					break;
+				case Action.MOVE:
+					drawMesh(
+						(float)Math.PI / (SIDES / 2) * next.getDirection(),
+						0,
+						-(float)Math.PI / 2,
+						x - next.getTime() * (float)Math.sin(Math.PI / (SIDES / 2) * next.getDirection()) / (float)Math.sin(Math.PI / 2),
+						0,
+						y - next.getTime() * (float)Math.cos(Math.PI / (SIDES / 2) * next.getDirection()) / (float)Math.sin(Math.PI / 2),
+						0.15f, 0.1f, 0.1f,
+						person, personMaterials, personTextures);
+					break;
+				case Action.SHOOT:
+					drawMesh(
+						(float)Math.PI / (SIDES / 2) * next.getDirection(),
+						0,
+						-(float)Math.PI / 2,
+						x * (float)Math.sin(Math.PI / (SIDES / 2) * dir) / (float)Math.sin(Math.PI / 2),
+						0,
+						y * (float)Math.cos(Math.PI / (SIDES / 2) * next.getDirection()) / (float)Math.sin(Math.PI / 2),
+						0.15f, 0.1f, 0.1f,
+						personShoot, personShootMaterials, personShootTextures);
+					drawMesh(
+						(float)Math.PI / (SIDES / 2) * next.getDirection(),
+						0,
+						-(float)Math.PI / 2,
+						x - next.getTime() * (float)Math.sin(Math.PI / (SIDES / 2) * next.getDirection()) / (float)Math.sin(Math.PI / 2),
+						0,
+						y - next.getTime() * (float)Math.cos(Math.PI / (SIDES / 2) * next.getDirection()) / (float)Math.sin(Math.PI / 2),
+						0.15f, 0.1f, 0.1f,
+						arrow, arrowMaterials, arrowTextures);
+					break;
+				case Action.FALL:
+					drawMesh(
+						(float)Math.PI / (SIDES / 2) * dir, // dir is the currently facing direction
+						0,
+						-(float)Math.PI / 2,
+						x,
+						-next.getTime(),
+						y,
+						0.15f, 0.1f, 0.1f,
+						person, personMaterials, personTextures);
+					break;
+				case Action.BAT:
+					drawMesh(0, 0, 0, 0, 2 - next.getTime(), 0,
+						0.015f, 0.015f, 0.015f,
+						bat, batMaterials, batTextures);
+					drawMesh(0, 0, 0, 1 - next.getTime() / 2, 2 - next.getTime(), 0,
+						0.015f, 0.015f, 0.015f,
+						bat, batMaterials, batTextures);
+					drawMesh(0, 0, 0, -1 + next.getTime() / 2, 2 - next.getTime(), 0,
+						0.015f, 0.015f, 0.015f,
+						bat, batMaterials, batTextures);
+					drawPerson(x, y);
+					break;
+				case Action.TRANSITION:
+					device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.FromArgb((int)next.getTime(), (int)next.getTime(), (int)next.getTime()), 1.0f, 0);
+					return;
+				case Action.WUMPUS:
+					drawMesh(0, 0, 0, 0, 0, 0, 0.05f, 0.05f, 0.05f, wumpus, wumpusMaterials, wumpusTextures);
+					break;
+				case Action.WUMPUS_HEART:
+					drawMesh(0, 0, 0, 0, 0, 0, 0.05f, 0.05f, 0.05f, wumpusHeart, wumpusHeartMaterials, wumpusHeartTextures);
+					break;
+				default:
+
+			}
+		}
+		else
+		{
+			drawPerson(x, y);
+		}
+
+		for (int i = 0; i < SIDES; i++)
+		{
+			drawWall(
+				(float)Math.PI / (SIDES / 2) * i + (float)Math.PI,
+				0,
+				0,
+				(float)Math.sin(Math.PI / (SIDES / 2) * i + Math.PI) + x,
+				0.5f,
+				(float)Math.cos(Math.PI / (SIDES / 2) * i + Math.PI) + y,
+				0.205f,
+				0.52f,
+				0.205f,
+				i);
+
+			drawMesh(
+				(float)Math.PI / (SIDES / 2) * i + (float)Math.PI,
+				0,
+				0,
+				(float)Math.sin(Math.PI / (SIDES / 2) * (i + 0.35f) + (float)Math.PI) + x,
+				1,
+				(float)Math.cos(Math.PI / (SIDES / 2) * (i + 0.35f) + (float)Math.PI) + y,
+				0.2f,
+				0.2f,
+				0.2f,
+				roomNumbers[i],
+				null,
+				null);
+		}
+
+		drawMesh(
+			0,
+			(float)Math.PI / 2,
+			(float)Math.PI,
+			x + getWidth(roomNumber) / 2,
+			0,
+			y + getHeight(roomNumber) / 2,
+			1,
+			1,
+			1,
+			roomNumber,
+			null,
+			null);
+
+		//drawMesh(0, (float)Math.PI / 2, 0, 0, 0, 0, 10, 20, 1, floor, floorMaterials, floorTextures);
+	}
+
+	private void drawWall(float yaw, float pitch, float roll, float x, float y, float z, float scaleX, float scaleY, float scaleZ, int num)
+	{
+		if (room.getTunnelInDirection(new Direction(num)))
+			drawMesh(yaw, pitch, roll, x, y, z, scaleX, scaleY, scaleZ, tunnel, tunnelMaterials, tunnelTextures);
+		else
+			drawMesh(yaw, pitch, roll, x, y, z, scaleX, scaleY, scaleZ, wall, wallMaterials, wallTextures);
+	}
+
+	private void drawPerson(float x, float y)
+	{
+		if (ge.action[1].get_Checked())
+		{
+			drawMesh(
+				(float)Math.PI / (SIDES / 2) * dir,
+				0,
+				-(float)Math.PI / 2,
+				x, 0, y,
+				0.15f, 0.1f, 0.1f,
+				personShoot, personShootMaterials, personShootTextures);
+			if (ge.gc.player.getArrows() > 0)
+				drawMesh(
+					(float)Math.PI / (SIDES / 2) * dir,
+					0,
+					-(float)Math.PI / 2,
+					x, 0, y,
+					0.15f, 0.1f, 0.1f,
+					arrow, arrowMaterials, arrowTextures);
+		}
+		else
+			drawMesh(
+				(float)Math.PI / (SIDES / 2) * dir,
+				0,
+				-(float)Math.PI / 2,
+				x, 0, y,
+				0.15f, 0.1f, 0.1f,
+				person, personMaterials, personTextures);
+	}
+
+	public void left()
+	{
+		angle += FAST_STEP;
+	}
+
+	public void right()
+	{
+		angle -= FAST_STEP;
+	}
+
+	public void move(int dir)
+	{
+		actions.Enqueue(new Action(Action.MOVE, 2.5f, SLOW_STEP, dir));
+	}
+
+	public void shoot(int dir)
+	{
+		actions.Enqueue(new Action(Action.SHOOT, 2.5f, FAST_STEP, dir));
+	}
+
+	public void fallInPit()
+	{
+		actions.Enqueue(new Action(Action.FALL, 20, FAST_STEP, true));
+	}
+
+	public void escapeFromPit()
+	{
+		if (actions.Peek().getAction() == Action.FALL)
+			actions.Dequeue();
+	}
+
+	public void bat()
+	{
+		actions.Enqueue(new Action(Action.BAT, 1, SLOW_STEP));
+	}
+
+	public void transition()
+	{
+		actions.Enqueue(new Action(Action.TRANSITION, 255, 10));
+	}
+
+	public void wumpus()
+	{
+		actions.Enqueue(new Action(Action.WUMPUS, 1, SLOW_STEP, true));
+	}
+
+	public void wumpusKills()
+	{
+		if (actions.Peek().getAction() == Action.WUMPUS)
+			actions.Peek().setAction(Action.WUMPUS_HEART);
+	}
+
+	public void escapeWumpus()
+	{
+		if (actions.Peek().getAction() == Action.WUMPUS)
+			actions.Dequeue();
+	}
+
+	public void setRoom(Room room)
+	{
+		if (!room.equals(this.room))
+			actions.Enqueue(new Action(Action.SET_ROOM, room));
+	}
+
+	private void setRoomHelper(Room room)
+	{
+		Room[] adj = ge.gc.map.getAdjacentRooms(room);
+		for (int i = 0; i < adj.length; i++)
+			if (adj[i] != null)
+				roomNumbers[i] = Mesh.TextFromFont(device, new System.Drawing.Font("Verdana", 1), Integer.toString(adj[i].getRoomNumber()), 0.001f, 0.1f);
+			else
+				roomNumbers[i] = null;
+
+		roomNumber = Mesh.TextFromFont(device, new System.Drawing.Font("Verdana", 1), Integer.toString(room.getRoomNumber()), 0.001f, 0.02f);
+		this.room = room;
+	}
+
+	public void resized(Object s, EventArgs e)
+	{
+		int height = this.get_Size().get_Height();
+		int width = 4 * height / 3;
+		if (width > ge.get_Width() - 410 && !maximizeArea)
+		{
+			width = ge.get_Width() - 410;
+			height = 3 * width / 4;
+		}
+		this.set_Size(new Size(width, height));
+	}
+
+	public void toggleRotate(Object s, EventArgs e)
+	{
+		autoRotate = !autoRotate;
+	}
+
+	private float getWidth(Mesh mesh)
+	{
+		if (mesh == null)
+			return -1;
+
+		Vector3 min = new Vector3();
+		Vector3 max = new Vector3();
+
+		GraphicsStream vertexData = null;
+		try
+		{
+			vertexData = mesh.LockVertexBuffer(LockFlags.None);
+			Geometry.ComputeBoundingBox(vertexData,
+				mesh.get_NumberVertices(),
+				mesh.get_VertexFormat(),
+				min, max);
+			mesh.UnlockVertexBuffer( );
+		}
+		finally
+		{
+			if (vertexData != null)
+				vertexData.Dispose();
+		}
+		return max.X - min.X;
+	}
+
+	private float getHeight(Mesh mesh)
+	{
+		if (mesh == null)
+			return -1;
+
+		Vector3 min = new Vector3();
+		Vector3 max = new Vector3();
+
+		GraphicsStream vertexData = null;
+		try
+		{
+			vertexData = mesh.LockVertexBuffer(LockFlags.None);
+			Geometry.ComputeBoundingBox(vertexData,
+				mesh.get_NumberVertices(),
+				mesh.get_VertexFormat(),
+				min, max);
+			mesh.UnlockVertexBuffer();
+		}
+		finally
+		{
+			if (vertexData != null)
+				vertexData.Dispose();
+		}
+		return max.Y - min.Y;
+	}
+}
+
+class Action
+{
+	public static final int MOVE = 0;
+	public static final int SHOOT = 1;
+	public static final int FALL = 2;
+	public static final int SET_ROOM = 3;
+	public static final int BAT = 4;
+	public static final int TRANSITION = 5;
+	public static final int WUMPUS = 6;
+	public static final int WUMPUS_HEART = 7;
+
+	private int action;
+	private Room room;
+	private int dir;
+	private float time = 0;
+	private float timestep = 0;
+	private float timelimit = 0;
+	private boolean neverExpires = false;
+
+	public Action(int action, float timelimit, float timestep)
+	{
+		this.action = action;
+		this.timelimit = timelimit;
+		this.timestep = timestep;
+	}
+
+	public Action(int action, float timelimit, float timestep, int dir)
+	{
+		this(action, timelimit, timestep);
+		this.dir = dir;
+	}
+
+	public Action(int action, float timelimit, float timestep, boolean neverExpires)
+	{
+		this(action, timelimit, timestep);
+		this.neverExpires = neverExpires;
+	}
+
+	public Action(int action, Room room)
+	{
+		this.action = action;
+		this.room = room;
+	}
+
+	public int getAction()
+	{
+		return action;
+	}
+
+	public void setAction(int action)
+	{
+		this.action = action;
+	}
+
+	public Room getRoom()
+	{
+		return room;
+	}
+
+	public int getDirection()
+	{
+		return dir;
+	}
+
+	public float getTime()
+	{
+		return time > timelimit ? timelimit : time;
+	}
+
+	public boolean expired()
+	{
+		return !neverExpires && time >= timelimit;
+	}
+
+	public void tick()
+	{
+		time += timestep;
+	}
+}

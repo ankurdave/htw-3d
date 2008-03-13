@@ -1,0 +1,79 @@
+package Wumpus;
+
+import System.Collections.Generic.*;
+import System.Windows.Forms.*;
+
+/**
+ * Summary description for Program
+ */
+public class Program
+{
+	/**
+	 * The main entry point for the application.
+	 */
+	/** @attribute System.STAThread() */
+	public static void main(String[] args)
+	{
+/*		try
+		{
+			HighScore h = new HighScore("highscore.highscore");
+			Player[] hs = h.get();
+			for (int i = 0; i < hs.length; i++)
+				if (hs[i] != null)
+					System.out.println(hs[i].toString());
+			Player in = new Player();
+			in.fromString("Test\t15\t1\t100\t1");
+			h.add(in);
+
+			hs = h.get();
+			for (int i = 0; i < hs.length; i++)
+				if (hs[i] != null)
+					System.out.println(hs[i].toString());
+		}
+		catch (java.io.IOException e)
+		{
+			System.out.println(e.get_Message());
+		}
+
+		System.Console.ReadKey();
+*/
+		while (true)
+		{
+			try
+			{
+				MainMenu m = new MainMenu();
+				if (m.ShowDialog() == DialogResult.OK)
+				{
+					m.Dispose();
+					LoadingSplash l = new LoadingSplash();
+					l.Show();
+					GameControl gc = new GameControl();
+					l.Close();
+					if (m.getChoice() == 0) // new game
+					{
+						try
+						{
+							gc.newGame();
+							Application.Run(gc.graphics);
+						}
+						catch (EndGameException e)
+						{
+
+						}
+					}
+					else if (m.getChoice() == 1)
+					{
+						gc.graphics.showHighScores(-1);
+					}
+					else
+						break;
+				}
+				else
+					break;
+			}
+			catch (EndApplicationException e)
+			{ break; }
+		}
+		 
+	}
+}

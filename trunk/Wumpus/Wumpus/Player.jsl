@@ -1,0 +1,130 @@
+package Wumpus;
+
+public class Player implements Comparable
+{
+	private static int MAX_COINS = 100;
+	private static int START_COINS = 3;
+	private int turns;
+	private int arrows;
+	private int coins;
+	private String name;
+	private GameControl gc;
+	private String caveName;
+	private boolean won = false;
+
+	public Player()
+	{
+		initialize("Bob");
+	}
+	public Player(GameControl gc, String n)
+	{
+		this.gc = gc;
+		this.caveName = gc.map.cave.getName();
+		initialize(n);
+	}
+	private void initialize(String n)
+	{
+		turns = 0;
+		arrows = 3;
+		coins = START_COINS;
+		name = n;
+	}
+
+	public void fromString(String s)
+	{
+		char[] sep = new char[1];
+		sep[0] = '\t';
+		String[] components = s.Split(sep);
+		name = components[0];
+		turns = Integer.parseInt(components[1]);
+		arrows = Integer.parseInt(components[2]);
+		coins = Integer.parseInt(components[3]);
+		won = Integer.parseInt(components[4]) == 1;
+		caveName = components[5];
+	}
+
+	public String toHighScoreString()
+	{
+		return name + "\t" + turns + "\t" + arrows + "\t" + coins + "\t" + (won ? "1" : "0") + "\t" + caveName;
+	}
+
+	//calculates and returns score
+	public int getCurrentScore()
+	{
+		return -turns + coins + (10 * arrows) + (won ? 100 : 0);
+	}
+	public void buyArrows(int num)
+	{
+		arrows += num;
+		gc.refreshGraphics();
+	}
+	public void move()
+	{
+		turns++;
+		if (turns <= MAX_COINS - START_COINS)
+			coins++;
+		gc.refreshGraphics();
+	}
+	public void shootArrow() throws InsufficientArrowsException
+	{
+		if (arrows - 1 < 0)
+			throw new InsufficientArrowsException();
+		arrows--;
+		gc.refreshGraphics();
+	}
+
+	public String getCaveName()
+	{
+		return caveName;
+	}
+
+	public void subtractCoins(int amount) throws InsufficientCoinsException
+	{
+		if (coins - amount <= 0)
+			throw new InsufficientCoinsException();
+		coins -= amount;
+		gc.refreshGraphics();
+	}
+	public int getCoins()
+	{
+		return coins;
+	}
+	public void setName(String n)
+	{
+		name = n;
+	}
+	public String getName()
+	{
+		return name;
+	}
+	public int getArrows()
+	{
+		return arrows;
+	}
+	public int getTurns()
+	{
+		return turns;
+	}
+
+	public String toString()
+	{
+		return "Player " + name + ": score: " + getCurrentScore();
+	}
+
+	public void win()
+	{
+		won = true;
+	}
+
+	public int compareTo(Object o)
+	{
+		if (o == null)
+			return 1;
+		Player that = (Player)o;
+		int diff = that.getCurrentScore() - this.getCurrentScore();
+		if (diff != 0)
+			return diff;
+		else
+			return this.getName().compareTo(that.getName());
+	}
+}
